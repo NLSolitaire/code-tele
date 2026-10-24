@@ -8,7 +8,9 @@
   #define MyAppVersion "1.0.0"
 #endif
 #define MyAppPublisher "Über-Downloader Open Source Project"
-#define MyAppURL "https://ko-fi.com/uberdownloader"
+#define MyAppURL "https://ko-fi.com/yddraiggoch"
+#define MyAppUpdatesURL "https://github.com/NLSolitaire/code-tele/releases"
+#define MyAppSupportURL "https://github.com/NLSolitaire/code-tele/issues"
 #define MyAppExeName "UberDownloader.Wpf.exe"
 
 [Setup]
@@ -17,8 +19,8 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
+AppSupportURL={#MyAppSupportURL}
+AppUpdatesURL={#MyAppUpdatesURL}
 DefaultDirName={localappdata}\Programs\Uber-Downloader
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE

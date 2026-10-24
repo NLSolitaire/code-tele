@@ -1043,7 +1043,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://ko-fi.com/uberdownloader",
+                FileName = "https://ko-fi.com/yddraiggoch",
                 UseShellExecute = true
             });
         }
