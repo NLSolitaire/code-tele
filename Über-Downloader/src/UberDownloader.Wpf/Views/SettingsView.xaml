@@ -1,0 +1,630 @@
+<UserControl x:Class="UberDownloader.Wpf.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800" Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <!-- Header avec titre & boutons de validation -->
+            <RowDefinition Height="Auto"/>
+            <!-- Bulle de notification succès -->
+            <RowDefinition Height="Auto"/>
+            <!-- Barre transversale de modifications en attente avant enregistrement -->
+            <RowDefinition Height="Auto"/>
+            <!-- Contenu TabControl -->
+            <RowDefinition Height="*"/>
+            <!-- Barre de statut / validation -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="{Binding Loc[BackToDownloads]}" Command="{Binding CancelCommand}" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundBrush}" Foreground="{DynamicResource TextSecondaryBrush}" BorderThickness="0" Padding="12,6" Margin="0,0,12,0"/>
+                <TextBlock Text="{Binding Loc[SettingsLogsButton]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{Binding Loc[Save]}" Command="{Binding SaveCommand}" Cursor="Hand"
+                        Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Padding="16,6" Margin="0,0,6,0"/>
+                <Button Content="{Binding Loc[Cancel]}" Command="{Binding CancelCommand}" Cursor="Hand"
+                        Background="{DynamicResource BorderBrushColor}" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="0" Padding="12,6"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 2. Bulle de confirmation (on reste sur la page comme demandé) -->
+        <Border Grid.Row="1"
+                Visibility="{Binding IsSuccessBubbleVisible, Converter={StaticResource BoolToVis}}"
+                Background="#064E3B" BorderBrush="#059669" BorderThickness="1"
+                CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="🎉" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SuccessBubbleTitle}" Foreground="#A7F3D0" FontWeight="Bold" FontSize="13"/>
+                    <TextBlock Text="{Binding SuccessBubbleSubtitle}" Foreground="#6EE7B7" FontSize="11" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="2" Content="✕" Command="{Binding DismissSuccessBubbleCommand}" Cursor="Hand"
+                        Background="Transparent" Foreground="#A7F3D0" BorderThickness="0"
+                        Padding="6,2" VerticalAlignment="Center" FontWeight="Bold"/>
+            </Grid>
+        </Border>
+
+        <!-- 2b. Barre transversale comptant le nombre de modifications avant enregistrement -->
+        <Border Grid.Row="2"
+                Visibility="{Binding HasPendingChanges, Converter={StaticResource BoolToVis}}"
+                Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1.5"
+                CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3" Color="#000000"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="✏️" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PendingChangesBannerText}" Foreground="#BFDBFE" FontWeight="Bold" FontSize="13"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding Loc[Save]}" Command="{Binding SaveCommand}" Cursor="Hand"
+                            Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                            Padding="16,6">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3. Onglets Réglages & Diagnostic -->
+        <TabControl Grid.Row="3" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" SelectionChanged="OnTabControlSelectionChanged">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Background" Value="{DynamicResource TabBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TabHeaderForegroundBrush}"/>
+                    <Setter Property="Padding" Value="14,8"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="TabBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" Margin="0,0,2,0">
+                                    <ContentPresenter ContentSource="Header"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource TabSelectedBackgroundBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TabSelectedForegroundBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- Onglet 1 : Général -->
+            <TabItem Header="{Binding Loc[TabGeneral]}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                    <StackPanel>
+                        <!-- Dossier de téléchargement -->
+                        <TextBlock Text="{Binding Loc[DownloadFolder]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding DownloadFolder, Mode=TwoWay}" Height="34" Padding="8,0" VerticalContentAlignment="Center" Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource BorderBrushColor}"/>
+                            <Button Grid.Column="1" Content="{Binding Loc[Browse]}" Command="{Binding BrowseFolderCommand}" Cursor="Hand" Background="{DynamicResource BorderBrushColor}" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="0" Padding="12,0" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <!-- Thème de l'application (Nuit / Jour / Système) -->
+                        <TextBlock Text="{Binding Loc[AppTheme]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" Height="34" Width="180" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- Langue de l'application (FR, EN, ES) -->
+                        <TextBlock Text="{Binding Loc[Language]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding Language, Mode=TwoWay}" Height="34" Width="140" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- Téléchargements simultanés avec Flèches Up/Down (>= 1) et option Illimité -->
+                        <TextBlock Text="{Binding Loc[MaxConcurrent]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Grid Width="140" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding MaxConcurrentDownloads, Mode=TwoWay}" IsReadOnly="True"
+                                         IsEnabled="{Binding IsMaxConcurrentCustomEnabled}"
+                                         Height="34" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                         Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" FontWeight="Bold" FontSize="13"/>
+                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                    <Button Content="▲" Command="{Binding IncrementConcurrentCommand}"
+                                            IsEnabled="{Binding IsMaxConcurrentCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
+                                    <Button Content="▼" Command="{Binding DecrementConcurrentCommand}"
+                                            IsEnabled="{Binding IsMaxConcurrentCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                            <CheckBox Content="{Binding Loc[Unlimited]}" IsChecked="{Binding IsMaxConcurrentUnlimited, Mode=TwoWay}"
+                                      Foreground="#F8FAFC" VerticalAlignment="Center" Margin="14,0,0,0" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <!-- Nombre max de tentatives automatiques (erreurs réseau / temporaires) et option Illimité -->
+                        <TextBlock Text="{Binding Loc[MaxRetriesLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Grid Width="140" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding MaxRetries, Mode=TwoWay}" IsReadOnly="True"
+                                         IsEnabled="{Binding IsMaxRetriesCustomEnabled}"
+                                         Height="34" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                         Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" FontWeight="Bold" FontSize="13"/>
+                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                    <Button Content="▲" Command="{Binding IncrementRetriesCommand}"
+                                            IsEnabled="{Binding IsMaxRetriesCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
+                                    <Button Content="▼" Command="{Binding DecrementRetriesCommand}"
+                                            IsEnabled="{Binding IsMaxRetriesCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                            <CheckBox Content="{Binding Loc[Unlimited]}" IsChecked="{Binding IsMaxRetriesUnlimited, Mode=TwoWay}"
+                                      Foreground="#F8FAFC" VerticalAlignment="Center" Margin="14,0,0,0" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <!-- Menu déroulant Limite de débit -->
+                        <TextBlock Text="{Binding Loc[SpeedLimit]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableSpeedLimits}" SelectedItem="{Binding SpeedLimit, Mode=TwoWay}" Height="34" Width="180" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- Modèle de nommage des playlists -->
+                        <TextBlock Text="{Binding Loc[PlaylistNamingTemplate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[PlaylistNamingTemplateDesc]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" Text="{Binding PlaylistNamingTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="True" Height="34" Width="280" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- Configuration interactive du Raccourci Clavier Global -->
+                        <TextBlock Text="{Binding Loc[GlobalHotkeyLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[GlobalHotkeyHelp]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,8"/>
+
+                        <!-- Mode Normal (Hors capture) -->
+                        <StackPanel Margin="0,0,0,14">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCapturingHotkey}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="14,6" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding GlobalHotkey}" Foreground="#38BDF8" FontWeight="Bold" FontSize="13"/>
+                                </Border>
+                                <Button Content="{Binding Loc[SetupHotkeyButton]}" Command="{Binding StartHotkeySetupCommand}"
+                                        Cursor="Hand" Height="34" Margin="10,0,0,0" Padding="14,0"
+                                        Background="#2563EB" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Mode Capture : 3 espaces libres pour pré-enregistrer les 3 touches -->
+                        <Border Background="#0F172A" BorderBrush="#2563EB" BorderThickness="1.5" CornerRadius="8" Padding="12" Margin="0,0,0,14">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCapturingHotkey}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[HotkeyInstructions]}" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                <!-- Les 3 espaces libres côte à côte -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <!-- Touche 1 -->
+                                    <Border Width="95" Height="42" Background="#1E293B" BorderBrush="#3B82F6" BorderThickness="1.5" CornerRadius="6" Margin="0,0,8,0">
+                                        <Grid>
+                                            <TextBlock Text="{Binding HotkeySlot1}" Foreground="#F8FAFC" FontWeight="Bold" FontSize="13"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Loc[HotkeySlotPlaceholder]}" Foreground="#64748B" FontSize="11"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HotkeySlot1}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Touche 2 -->
+                                    <Border Width="95" Height="42" Background="#1E293B" BorderBrush="#3B82F6" BorderThickness="1.5" CornerRadius="6" Margin="0,0,8,0">
+                                        <Grid>
+                                            <TextBlock Text="{Binding HotkeySlot2}" Foreground="#F8FAFC" FontWeight="Bold" FontSize="13"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Loc[HotkeySlotPlaceholder]}" Foreground="#64748B" FontSize="11"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HotkeySlot2}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Touche 3 -->
+                                    <Border Width="95" Height="42" Background="#1E293B" BorderBrush="#3B82F6" BorderThickness="1.5" CornerRadius="6" Margin="0,0,8,0">
+                                        <Grid>
+                                            <TextBlock Text="{Binding HotkeySlot3}" Foreground="#F8FAFC" FontWeight="Bold" FontSize="13"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Loc[HotkeySlotPlaceholder]}" Foreground="#64748B" FontSize="11"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HotkeySlot3}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Boutons : Confirmer, Effacer, Annuler -->
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="{Binding Loc[ConfirmHotkeyButton]}" Command="{Binding ConfirmHotkeyCommand}"
+                                            IsEnabled="{Binding CanConfirmHotkey}"
+                                            Cursor="Hand" Height="32" Padding="14,0" Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,8,0">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <Button Content="{Binding Loc[ResetHotkeyButton]}" Command="{Binding ResetHotkeySlotsCommand}"
+                                            Cursor="Hand" Height="32" Padding="12,0" Background="#334155" Foreground="#F8FAFC" BorderThickness="0" Margin="0,0,8,0">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <Button Content="{Binding Loc[CancelHotkeyButton]}" Command="{Binding CancelHotkeySetupCommand}"
+                                            Cursor="Hand" Height="32" Padding="12,0" Background="Transparent" Foreground="#94A3B8" BorderThickness="1" BorderBrush="#475569">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+
+
+                        <!-- Options à cocher -->
+                        <CheckBox Content="{Binding Loc[AutoResumeOnStartup]}" IsChecked="{Binding AutoResumeOnStartup, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoClipboardWatch]}" IsChecked="{Binding ClipboardWatch, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[EnableWindowsNotifications]}" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoEmbedMetadata]}" IsChecked="{Binding EmbedThumbnail, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoSniffStreams]}" IsChecked="{Binding AutoSniff, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+
+                        <!-- Navigateur pour l'extraction de flux -->
+                        <TextBlock Text="{Binding Loc[ExtractionBrowserLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableExtractionBrowsers}" SelectedItem="{Binding ExtractionBrowser, Mode=TwoWay}" Height="34" Width="220" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet 2 : Directs (Lives) -->
+            <TabItem Header="{Binding Loc[TabLives]}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                    <StackPanel>
+                        <!-- Moteur live : Streamlink (reco) ou yt-dlp -->
+                        <TextBlock Text="{Binding Loc[LiveEngine]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableLiveEngines}" SelectedItem="{Binding LiveEngine, Mode=TwoWay}" Height="34" Width="240" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- Choix binaire : depuis le début / depuis le clic avec icône 'i' infobulle Twitch -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="{Binding Loc[LiveRecordMode]}" Foreground="#94A3B8" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text=" ℹ️" Foreground="#38BDF8" FontSize="14" Cursor="Help"
+                                       ToolTip="{Binding Loc[TwitchTooltip]}"
+                                       VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding AvailableLiveRecordModes}" SelectedItem="{Binding LiveRecordMode, Mode=TwoWay}" Height="34" Width="320" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+
+                        <!-- 6.5 Limite de durée libre avec case Illimité et flèches Min 1 min / Max 300 min -->
+                        <TextBlock Text="{Binding Loc[LiveMaxDurationLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <CheckBox Content="{Binding Loc[Unlimited]}" IsChecked="{Binding IsLiveDurationUnlimited, Mode=TwoWay}"
+                                      Foreground="#F8FAFC" VerticalAlignment="Center" Margin="0,0,16,0" Cursor="Hand"/>
+                            <Grid Width="160" VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding LiveMaxDurationCustom, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         IsEnabled="{Binding IsLiveDurationCustomEnabled}"
+                                         Height="34" Padding="8,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                         Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" FontWeight="SemiBold"/>
+                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                    <Button Content="▲" Command="{Binding IncrementLiveDurationCommand}"
+                                            IsEnabled="{Binding IsLiveDurationCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
+                                    <Button Content="▼" Command="{Binding DecrementLiveDurationCommand}"
+                                            IsEnabled="{Binding IsLiveDurationCustomEnabled}"
+                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                        <TextBlock Text="{Binding LiveDurationValidationMessage}" Foreground="#EF4444" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6"
+                                   Visibility="{Binding HasLiveDurationError, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding Loc[LiveDurationHint]}" Foreground="#64748B" FontSize="11" Margin="0,0,0,14"/>
+
+                        <!-- 6.6 Action coupure -->
+                        <TextBlock Text="{Binding Loc[LiveInterruptionActionLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding AvailableLiveInterruptionActions}" SelectedItem="{Binding LiveInterruptionAction, Mode=TwoWay}"
+                                  Height="34" Width="380" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet 3 : Paramètres Avancés (2 sous-onglets : Vidéos et Audios) -->
+            <TabItem Header="{Binding Loc[TabAdvanced]}">
+                <TabControl Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Margin="10">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Background" Value="{DynamicResource TabBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TabHeaderForegroundBrush}"/>
+                            <Setter Property="Padding" Value="12,6"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </TabControl.Resources>
+
+                    <!-- Sous-onglet Vidéos -->
+                    <TabItem Header="{Binding Loc[SubTabVideo]}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="12" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                            <StackPanel>
+                                <!-- Résolution exacte -->
+                                <TextBlock Text="{Binding Loc[ExactResolution]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableVideoResolutions}" SelectedItem="{Binding AdvancedVideoResolution, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- FPS -->
+                                <TextBlock Text="{Binding Loc[FrameRate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableVideoFpsList}" SelectedItem="{Binding AdvancedVideoFps, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Codec vidéo -->
+                                <TextBlock Text="{Binding Loc[VideoCodec]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableVideoCodecs}" SelectedItem="{Binding AdvancedVideoCodec, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Plage dynamique -->
+                                <TextBlock Text="{Binding Loc[DynamicRange]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableDynamicRanges}" SelectedItem="{Binding AdvancedVideoDynamicRange, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Débit vidéo -->
+                                <TextBlock Text="{Binding Loc[VideoBitrate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableVideoBitrates}" SelectedItem="{Binding AdvancedVideoBitrate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- Sous-onglet Audios -->
+                    <TabItem Header="{Binding Loc[SubTabAudio]}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="12" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                            <StackPanel>
+                                <!-- Codec audio -->
+                                <TextBlock Text="{Binding Loc[AudioCodec]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAudioCodecs}" SelectedItem="{Binding AdvancedAudioCodec, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Débit binaire -->
+                                <TextBlock Text="{Binding Loc[AudioBitrate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAudioBitrates}" SelectedItem="{Binding AdvancedAudioBitrate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Fréquence d'échantillonnage -->
+                                <TextBlock Text="{Binding Loc[SampleRate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAudioSampleRates}" SelectedItem="{Binding AdvancedAudioSampleRate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Profondeur de bits -->
+                                <TextBlock Text="{Binding Loc[BitDepth]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAudioBitDepths}" SelectedItem="{Binding AdvancedAudioBitDepth, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <!-- Canaux audio -->
+                                <TextBlock Text="{Binding Loc[Channels]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAudioChannels}" SelectedItem="{Binding AdvancedAudioChannels, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+
+            <!-- Onglet 4 : Diagnostic & Journal (Logs) avec dernière entrée en jaune (sans scroll automatique) -->
+            <TabItem Header="{Binding Loc[TabLogs]}">
+                <Grid Margin="14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Barre d'actions diagnostic -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="{Binding Loc[CheckUpdates]}" Command="{Binding UpdateYtDlpCommand}" Cursor="Hand" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Padding="12,6" Margin="0,0,8,0"/>
+                            <Button Content="{Binding Loc[OpenAppData]}" Command="{Binding OpenAppDataCommand}" Cursor="Hand" Background="#334155" Foreground="White" BorderThickness="0" Padding="12,6" Margin="0,0,8,0"/>
+                            <Button Content="{Binding Loc[Refresh]}" Command="{Binding RefreshLogsCommand}" Cursor="Hand" Background="#1E293B" Foreground="#94A3B8" BorderThickness="0" Padding="10,6" Margin="0,0,8,0"/>
+                            <Button Content="{Binding Loc[ClearLogs]}" Command="{Binding ClearLogsCommand}" Cursor="Hand" Background="#1E293B" Foreground="#EF4444" BorderThickness="0" Padding="10,6"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Visualiseur de logs : RichTextBox en lecture seule avec sélection et copie formatée -->
+                    <Border Grid.Row="1" Background="{DynamicResource LogViewerBackgroundBrush}" CornerRadius="6" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="8">
+                        <RichTextBox x:Name="LogRichTextBox"
+                                     IsReadOnly="True"
+                                     IsReadOnlyCaretVisible="True"
+                                     Focusable="True"
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                     BorderThickness="0"
+                                     FontFamily="Consolas"
+                                     FontSize="11"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Disabled"
+                                     IsDocumentEnabled="True"
+                                     PreviewMouseWheel="OnLogRichTextBoxPreviewMouseWheel">
+                            <RichTextBox.ContextMenu>
+                                <ContextMenu Background="#1E293B" BorderBrush="#334155">
+                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[CopyShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.Copy" Foreground="#F8FAFC"/>
+                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[SelectAllShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.SelectAll" Foreground="#F8FAFC"/>
+                                </ContextMenu>
+                            </RichTextBox.ContextMenu>
+                        </RichTextBox>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Onglet 5 : À propos & Licence -->
+            <TabItem Header="{Binding Loc[TabAbout]}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                    <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                        
+                        <!-- Header App + Version -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="⚡" FontSize="20" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Loc[AppTitle]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Loc[AboutDescription]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                
+                                <Border Grid.Column="1" Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="12" Padding="12,5" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Loc[AppVersionLabel]}" Foreground="#93C5FD" FontWeight="Bold" FontSize="11"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Carte Soutien Ko-fi -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="#E11D48" BorderThickness="1.5" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="☕" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[AboutSupportTitle]}" FontSize="14" FontWeight="Bold" Foreground="#F43F5E" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Loc[AboutSupportText]}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18"/>
+                                <Button Content="{Binding Loc[SupportKofiButton]}" Command="{Binding OpenKofiCommand}" Cursor="Hand"
+                                        Background="#FF5E5B" Foreground="White" FontWeight="Bold" FontSize="12"
+                                        BorderThickness="0" Padding="16,8" HorizontalAlignment="Left">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Carte Licence et Composants tiers -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="📜" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[AboutLicenseTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Loc[AboutLicenseText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                
+                                <Separator Background="{DynamicResource BorderBrushColor}" Margin="0,6,0,12"/>
+
+                                <TextBlock Text="{Binding Loc[AboutThirdPartyTitle]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[AboutThirdPartyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18"/>
+                                
+                                <Button Content="{Binding Loc[AboutOpenNoticesButton]}" Command="{Binding OpenThirdPartyNoticesCommand}" Cursor="Hand"
+                                        Background="{DynamicResource CardBackgroundBrush}" Foreground="#38BDF8" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                        Padding="12,6" HorizontalAlignment="Left" FontSize="11" FontWeight="SemiBold">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Carte Avis Juridique & Responsabilité -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="⚖️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[AboutDisclaimerTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Loc[AboutDisclaimerText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Carte Vie Privée -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[AboutPrivacyTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Loc[AboutPrivacyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- 4. Message de statut -->
+        <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Bold" Margin="0,8,0,0" VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>

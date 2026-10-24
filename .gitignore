@@ -1,0 +1,61 @@
+# Visual Studio & .NET Build Artifacts
+**/bin/
+**/obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+.idea/
+TestResults/
+*.nupkg
+*.snupkg
+
+# Distribution & Publish directories
+dist/
+publish/
+output/
+[Ll]ancer-UberDownloader.exe
+
+# Temporary media downloads & fragment files
+scratch/
+*.part
+*.part-*
+*.ytdl
+*.aria2
+*.mkv
+*.mp4
+*.webm
+*.mp3
+*.m4a
+*.flac
+*.wav
+
+# Local database, runtime data and logs
+*.log
+*.sqlite
+*.sqlite3
+*.db
+logs/
+data/
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# AI and Tooling metadata
+.gemini/
+.claude/
+.agents/
+
+# OS specific files
+Thumbs.db
+Desktop.ini
+.DS_Store
+$RECYCLE.BIN/

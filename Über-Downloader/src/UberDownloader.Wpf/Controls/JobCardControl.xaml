@@ -1,0 +1,697 @@
+<UserControl x:Class="UberDownloader.Wpf.Controls.JobCardControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:models="clr-namespace:UberDownloader.Core.Models;assembly=UberDownloader.Core"
+             mc:Ignorable="d" 
+             d:DesignWidth="700">
+    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10" BorderBrush="{DynamicResource CardItemBorderBrush}" BorderThickness="1" Margin="0,0,0,10" Padding="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Icône / Miniature -->
+            <Border Grid.RowSpan="2" Width="64" Height="48" CornerRadius="8" Background="{DynamicResource SubCardBackgroundBrush}" Margin="0,0,12,0" VerticalAlignment="Center">
+                <TextBlock FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="🎬"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPlaylist}" Value="True">
+                                    <Setter Property="Text" Value="📑"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Border>
+
+            <!-- Infos Titre & Statut -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Badge 🔴 Direct pour les chaînes en direct -->
+                    <Border Visibility="{Binding IsLive, Converter={StaticResource BoolToVis}}"
+                            Background="#DC2626" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Loc[BadgeLive]}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                    </Border>
+                    <!-- Badge 📑 Playlist si c'est une playlist -->
+                    <Border Visibility="{Binding IsPlaylist, Converter={StaticResource BoolToVis}}"
+                            Background="#6366F1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Loc[BadgePlaylist]}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                    </Border>
+                    <!-- Numéro de la vidéo dans la playlist (ex: 001) -->
+                    <Border Visibility="{Binding HasIndex, Converter={StaticResource BoolToVis}}"
+                            Background="#334155" CornerRadius="4" Padding="5,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding IndexStr}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+                    </Border>
+                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                    <Border Visibility="{Binding IsPlaylist, Converter={StaticResource BoolToVis}}"
+                            Background="#1E293B" CornerRadius="6" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PlaylistVideosCountText}" Foreground="#38BDF8" FontSize="10" FontWeight="SemiBold"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Résumé spécifique pour une Playlist globale -->
+                <TextBlock Visibility="{Binding IsPlaylist, Converter={StaticResource BoolToVis}}"
+                           Text="{Binding PlaylistSummaryText}" Foreground="#94A3B8" FontSize="11" FontWeight="Medium" Margin="0,4,0,0"/>
+
+                <!-- Statut pour une vidéo simple -->
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                            Visibility="{Binding IsPlaylist, Converter={StaticResource InverseBoolToVis}}">
+                    <TextBlock FontWeight="SemiBold" Margin="0,0,8,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding Status}"/>
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Queued}">
+                                        <Setter Property="Foreground" Value="#9CA3AF"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusQueued]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Downloading}">
+                                        <Setter Property="Foreground" Value="#3B82F6"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusDownloading]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsLiveDownloading}" Value="True">
+                                        <Setter Property="Foreground" Value="#EF4444"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusLiveRecording]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Processing}">
+                                        <Setter Property="Foreground" Value="#A855F7"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusProcessing]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                        <Setter Property="Foreground" Value="#10B981"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusFinished]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Error}">
+                                        <Setter Property="Foreground" Value="#EF4444"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusError]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.LiveInterrupted}">
+                                        <Setter Property="Foreground" Value="#F59E0B"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusLiveInterrupted]}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Cancelled}">
+                                        <Setter Property="Foreground" Value="#9CA3AF"/>
+                                        <Setter Property="Text" Value="{Binding Loc[StatusCancelled]}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding StatusDetail}" Foreground="#60A5FA" FontSize="11" Margin="0,0,8,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StatusDetail}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding SizeStr}" Foreground="#E5E7EB" FontWeight="Medium" FontSize="11" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding SpeedStr}" Foreground="#9CA3AF" FontSize="11" Margin="0,0,8,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLiveDownloading}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding EtaStr}" Foreground="#9CA3AF" FontSize="11">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLiveDownloading}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Boutons Actions -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Actions spécifiques aux Playlists -->
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsPlaylist, Converter={StaticResource BoolToVis}}">
+                    <!-- Réessayer les échecs de la playlist -->
+                    <Button Content="{Binding Loc[RetryOnlyFailed]}" Command="{Binding RetryFailedPlaylistCommand}"
+                            Visibility="{Binding HasErrors, Converter={StaticResource BoolToVis}}"
+                            Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#059669" Foreground="White" FontWeight="SemiBold" BorderThickness="0"/>
+                    <!-- Pause playlist -->
+                    <Button Content="{Binding Loc[ActionPause]}" Command="{Binding PausePlaylistCommand}" Cursor="Hand" Width="65" Height="28" Margin="0,0,6,0" Background="#D97706" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding CanPausePlaylist, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Reprendre playlist -->
+                    <Button Content="{Binding Loc[ActionRetry]}" Command="{Binding ResumePlaylistCommand}" Cursor="Hand" Width="75" Height="28" Margin="0,0,6,0" Background="#2563EB" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding CanResumePlaylist, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Annuler playlist -->
+                    <Button Content="{Binding Loc[ActionCancel]}" Command="{Binding CancelPlaylistCommand}" Cursor="Hand" Width="65" Height="28" Margin="0,0,6,0" Background="#DC2626" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding CanCancelPlaylist, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Déplier / Replier la liste des vidéos (▼ / ▲) -->
+                    <Button Command="{Binding ToggleExpandCommand}" Cursor="Hand" Width="32" Height="28" Margin="0,0,6,0" Background="#334155" Foreground="White" FontWeight="Bold" BorderThickness="0" ToolTip="{Binding Loc[ExpandPlaylist]}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Content" Value="▼"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                        <Setter Property="Content" Value="▲"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+
+                <!-- Actions spécifiques aux vidéos individuelles -->
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsPlaylist, Converter={StaticResource InverseBoolToVis}}">
+                    <!-- 6.4 Bouton Terminer & Enregistrer pour direct en cours -->
+                    <Button Content="{Binding Loc[ActionStopAndSaveLive]}" Command="{Binding StopLiveCommand}" Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                            Visibility="{Binding IsLiveDownloading, Converter={StaticResource BoolToVis}}"/>
+
+                    <!-- 6.6 Boutons pour direct interrompu -->
+                    <Button Content="{Binding Loc[ActionKeepClip]}" Command="{Binding KeepClipCommand}" Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#2563EB" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding IsLiveInterrupted, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="{Binding Loc[ActionRetry]}" Command="{Binding RetryCommand}" Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#D97706" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding IsLiveInterrupted, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="{Binding Loc[ActionDelete]}" Command="{Binding DeleteLiveCommand}" Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#DC2626" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                            Visibility="{Binding IsLiveInterrupted, Converter={StaticResource BoolToVis}}"/>
+
+                <Button Content="{Binding Loc[ActionOpen]}" Command="{Binding OpenFileCommand}" Cursor="Hand" Width="60" Height="28" Margin="0,0,6,0" Background="#2563EB" Foreground="White" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="{Binding Loc[ActionFolder]}" Command="{Binding OpenFolderCommand}" Cursor="Hand" Width="60" Height="28" Margin="0,0,6,0" Background="#374151" Foreground="White" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="{Binding Loc[ActionPause]}" Command="{Binding PauseCommand}" Cursor="Hand" Width="65" Height="28" Margin="0,0,6,0" Background="#D97706" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Downloading}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Processing}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Queued}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="{Binding Loc[ActionRetry]}" Command="{Binding RetryCommand}" Cursor="Hand" Width="65" Height="28" Margin="0,0,6,0" Background="#059669" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Paused}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Error}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Cancelled}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="{Binding Loc[ActionCancel]}" Command="{Binding CancelCommand}" Cursor="Hand" Width="65" Height="28" Margin="0,0,6,0" Background="#DC2626" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Downloading}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Processing}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Queued}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Paused}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="{Binding Loc[ActionExtractStream]}" Command="{Binding ManualExtractCommand}" Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,6,0" Background="#7C3AED" Foreground="White" FontWeight="SemiBold" BorderThickness="0" ToolTip="{Binding Loc[ExtractStreamTooltip]}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Error}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- Bouton 3 points avec menu déroulant des caractéristiques du téléchargement -->
+                <Grid Margin="0,0,4,0">
+                    <Button x:Name="MoreButton" Content="⋮" Command="{Binding ToggleDetailsCommand}"
+                            Cursor="Hand" Width="28" Height="28" FontSize="16" FontWeight="Bold"
+                            Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}" BorderThickness="0"
+                            ToolTip="{Binding Loc[CharacteristicsToolTip]}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bdr" Background="{TemplateBinding Background}" CornerRadius="6" Width="28" Height="28">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bdr" Property="Background" Value="{DynamicResource SubCardBackgroundBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Popup IsOpen="{Binding IsDetailsOpen, Mode=TwoWay}"
+                           StaysOpen="False"
+                           PlacementTarget="{Binding ElementName=MoreButton}"
+                           Placement="Bottom"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade">
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrushColor}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12"
+                                Width="320"
+                                Margin="0,4,8,8">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.4" Color="#000000"/>
+                            </Border.Effect>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[CharacteristicsTitle]}"
+                                           FontWeight="Bold" FontSize="12"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,10"/>
+
+                                <!-- Bouton Relancer disponible dans le menu -->
+                                <Button Content="{Binding Loc[ActionRetry]}" Command="{Binding RetryCommand}" Cursor="Hand" FontSize="11" FontWeight="SemiBold" Height="28" Margin="0,0,0,8" Background="#D97706" Foreground="White" BorderThickness="0">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+
+                                <!-- Extraction Manuelle -->
+                                <Button Content="{Binding Loc[ActionExtractStream]}" Command="{Binding ManualExtractCommand}" Cursor="Hand" FontSize="11" FontWeight="SemiBold" Height="28" Margin="0,0,0,10" Background="#7C3AED" Foreground="White" BorderThickness="0" ToolTip="{Binding Loc[ExtractStreamTooltip]}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+
+                                <!-- Lien URL avec bouton Copier -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsLink]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsUrl}" Foreground="#3B82F6" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding CharacteristicsUrl}"/>
+                                    <Button Grid.Column="2" Content="{Binding Loc[Copy]}" Command="{Binding CopyUrlCommand}" Cursor="Hand" FontSize="10" Padding="6,2" Margin="6,0,0,0" Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrushColor}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="4"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </Grid>
+
+                                <Separator Background="{DynamicResource BorderBrushColor}" Margin="0,2,0,8"/>
+
+                                <!-- Résolution -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsResolution]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsResolution}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium"/>
+                                </Grid>
+
+                                <!-- Conteneur -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsContainer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsContainer}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium"/>
+                                </Grid>
+
+                                <!-- Codec -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsCodec]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsCodec}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium"/>
+                                </Grid>
+
+                                <!-- Nb de sous-titres -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsSubtitles]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsSubtitles}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- Nb de pistes audio -->
+                                <Grid Margin="0,0,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Loc[CharacteristicsAudioTracks]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CharacteristicsAudio}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- Section Diagnostics & Historique (Étape 6) -->
+                                <StackPanel Visibility="{Binding HasDiagnostics, Converter={StaticResource BoolToVis}}">
+                                    <Separator Background="{DynamicResource BorderBrushColor}" Margin="0,8,0,8"/>
+                                    <TextBlock Text="{Binding Loc[DiagnosticsSectionTitle]}"
+                                               FontWeight="Bold" FontSize="11"
+                                               Foreground="#F59E0B"
+                                               Margin="0,0,0,6"/>
+
+                                    <!-- Tentatives -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="110"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Loc[DiagnosticAttemptsLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DiagnosticsAttemptsText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" FontWeight="Medium"/>
+                                    </Grid>
+
+                                    <!-- Dernière erreur -->
+                                    <StackPanel Margin="0,2,0,0">
+                                        <TextBlock Text="{Binding Loc[DiagnosticLastErrorLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                                        <Border Background="#450A0A" BorderBrush="#DC2626" BorderThickness="1" CornerRadius="4" Padding="6,4">
+                                            <TextBlock Text="{Binding DiagnosticsLastErrorText}" Foreground="#FCA5A5" FontSize="10" TextWrapping="Wrap"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
+                </StackPanel>
+
+                <Button Content="✕" Command="{Binding DeleteCommand}" Cursor="Hand" Width="28" Height="28" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" ToolTip="{Binding Loc[RemoveFromListTooltip]}"/>
+            </StackPanel>
+
+            <!-- 6.2 Barre de progression : masquée pour les directs en cours au profit des métriques -->
+            <ProgressBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="4" Margin="0,8,0,0"
+                         Minimum="0" Maximum="100" Value="{Binding Progress}" Background="#374151" Foreground="#3B82F6" BorderThickness="0">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsLiveDownloading}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.LiveInterrupted}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+
+            <!-- Rangée 2 : Liste des vidéos de la playlist (dépliable) -->
+            <StackPanel Grid.Row="2" Grid.ColumnSpan="3"
+                        Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
+                        Margin="0,12,0,0">
+                <Border Height="1" Background="{DynamicResource BorderBrushColor}" Margin="0,0,0,10" Opacity="0.5"/>
+                <ItemsControl ItemsSource="{Binding ChildCards}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource SubCardBackgroundBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,0,6" BorderBrush="{DynamicResource CardItemBorderBrush}" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="34" Height="24" Background="#1E293B" CornerRadius="4" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding IndexStr}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="{Binding StatusDetail}" Foreground="#60A5FA" FontSize="10" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding SizeStr}" Foreground="#94A3B8" FontSize="10" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding SpeedStr}" Foreground="#64748B" FontSize="10"/>
+                                        </StackPanel>
+                                        <ProgressBar Height="2" Minimum="0" Maximum="100" Value="{Binding Progress}" Background="#334155" Foreground="#3B82F6" BorderThickness="0" Margin="0,4,0,0">
+                                            <ProgressBar.Style>
+                                                <Style TargetType="ProgressBar">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Downloading}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Processing}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ProgressBar.Style>
+                                        </ProgressBar>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <!-- Pause unitaire -->
+                                        <Button Content="⏸" Command="{Binding PauseCommand}" Width="26" Height="24" Cursor="Hand" Background="#D97706" Foreground="White" BorderThickness="0" Margin="0,0,4,0" ToolTip="{Binding Loc[ActionPause]}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Downloading}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Queued}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Relancer / Reprendre unitaire -->
+                                        <Button Content="🔄" Command="{Binding RetryCommand}" Width="26" Height="24" Cursor="Hand" Background="#059669" Foreground="White" BorderThickness="0" Margin="0,0,4,0" ToolTip="{Binding Loc[ActionRetry]}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Error}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Paused}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Cancelled}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Ouvrir le fichier -->
+                                        <Button Content="▶" Command="{Binding OpenFileCommand}" Width="26" Height="24" Cursor="Hand" Background="#2563EB" Foreground="White" BorderThickness="0" Margin="0,0,4,0" ToolTip="{Binding Loc[ActionOpen]}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Ouvrir le dossier -->
+                                        <Button Content="📁" Command="{Binding OpenFolderCommand}" Width="26" Height="24" Cursor="Hand" Background="#334155" Foreground="White" BorderThickness="0" Margin="0,0,4,0" ToolTip="{Binding Loc[ActionFolder]}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Caractéristiques & Diagnostics unitaire (Étape 6) -->
+                                        <Grid Margin="0,0,4,0">
+                                            <Button x:Name="ChildMoreBtn" Content="⋮" Command="{Binding ToggleDetailsCommand}"
+                                                    Cursor="Hand" Width="24" Height="24" FontSize="14" FontWeight="Bold"
+                                                    Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}" BorderThickness="0"
+                                                    ToolTip="{Binding Loc[CharacteristicsToolTip]}"/>
+                                            <Popup IsOpen="{Binding IsDetailsOpen, Mode=TwoWay}"
+                                                   StaysOpen="False"
+                                                   PlacementTarget="{Binding ElementName=ChildMoreBtn}"
+                                                   Placement="Bottom"
+                                                   AllowsTransparency="True"
+                                                   PopupAnimation="Fade">
+                                                <Border Background="{DynamicResource CardBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource BorderBrushColor}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="8"
+                                                        Padding="12"
+                                                        Width="300"
+                                                        Margin="0,4,8,8">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.4" Color="#000000"/>
+                                                    </Border.Effect>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Loc[CharacteristicsTitle]}"
+                                                                   FontWeight="Bold" FontSize="12"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   Margin="0,0,0,8"/>
+
+                                                        <!-- Lien URL avec bouton Copier -->
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Loc[CharacteristicsLink]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding CharacteristicsUrl}" Foreground="#3B82F6" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                            <Button Grid.Column="2" Content="{Binding Loc[Copy]}" Command="{Binding CopyUrlCommand}" Cursor="Hand" FontSize="10" Padding="6,2" Margin="6,0,0,0" Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrushColor}">
+                                                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                                                            </Button>
+                                                        </Grid>
+
+                                                        <Grid Margin="0,0,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Loc[CharacteristicsResolution]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding CharacteristicsResolution}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11"/>
+                                                        </Grid>
+
+                                                        <!-- Diagnostics & Historique -->
+                                                        <StackPanel Visibility="{Binding HasDiagnostics, Converter={StaticResource BoolToVis}}">
+                                                            <Separator Background="{DynamicResource BorderBrushColor}" Margin="0,6,0,6"/>
+                                                            <TextBlock Text="{Binding Loc[DiagnosticsSectionTitle]}" FontWeight="Bold" FontSize="11" Foreground="#F59E0B" Margin="0,0,0,4"/>
+                                                            <Grid Margin="0,0,0,4">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="100"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Loc[DiagnosticAttemptsLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding DiagnosticsAttemptsText}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11"/>
+                                                            </Grid>
+                                                            <Border Background="#450A0A" BorderBrush="#DC2626" BorderThickness="1" CornerRadius="4" Padding="6,4">
+                                                                <TextBlock Text="{Binding DiagnosticsLastErrorText}" Foreground="#FCA5A5" FontSize="10" TextWrapping="Wrap"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
+
+                                        <!-- Annuler unitaire -->
+                                        <Button Content="✕" Command="{Binding CancelCommand}" Width="24" Height="24" Cursor="Hand" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" ToolTip="{Binding Loc[ActionCancel]}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:JobStatus.Finished}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

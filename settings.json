@@ -1,0 +1,18 @@
+{
+    "download_folder": "C:/Users/HP/Downloads/Tele-cad",
+    "quality": "720p HD",
+    "browser_cookies": "opera",
+    "ffmpeg_path": "C:\\Users\\HP\\OneDrive\\Documents\\bin",
+    "allow_playlist": false,
+    "use_archive": true,
+    "embed_subtitles": false,
+    "embed_thumbnail": true,
+    "play_sound": true,
+    "speed_limit": "Illimit\u00e9",
+    "auto_sniff": true,
+    "clean_incomplete_on_stop": true,
+    "startup_mode": "Barre horizontale",
+    "last_mode": "full",
+    "bar_x": 0,
+    "bar_y": 0
+}

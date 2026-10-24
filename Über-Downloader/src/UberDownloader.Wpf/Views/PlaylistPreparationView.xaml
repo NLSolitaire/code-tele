@@ -1,0 +1,336 @@
+<UserControl x:Class="UberDownloader.Wpf.Views.PlaylistPreparationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900"
+             Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- 0: Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- 1: Alertes & Bandeau Playlist Connue -->
+            <RowDefinition Height="Auto"/>
+            <!-- 2: Paramètres communs -->
+            <RowDefinition Height="Auto"/>
+            <!-- 3: Barre d'outils de sélection -->
+            <RowDefinition Height="Auto"/>
+            <!-- 4: Liste des vidéos -->
+            <RowDefinition Height="*"/>
+            <!-- 5: Footer d'action -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding Loc[PlaylistPrepTitle]}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding Loc[PlaylistPrepSubtitle]}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Content="{Binding Loc[Cancel]}" Command="{Binding CancelCommand}" Cursor="Hand"
+                        Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                        Padding="14,6" Margin="0,0,8,0" FontWeight="Medium">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+                <Button Content="{Binding DownloadButtonText}" Command="{Binding StartDownloadCommand}" IsEnabled="{Binding CanDownload}" Cursor="Hand"
+                        Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Padding="18,6">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 1. Alertes & Bandeau Playlist Connue -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <!-- Alerte Espace Disque -->
+            <Border Visibility="{Binding IsDiskSpaceWarningVisible, Converter={StaticResource BoolToVis}}"
+                    Background="#78350F" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                <TextBlock Text="{Binding DiskSpaceWarningText}" Foreground="#FEF3C7" FontWeight="SemiBold" FontSize="12"/>
+            </Border>
+
+            <!-- Bandeau Playlist Déjà Connue (Étape 6) -->
+            <Border Visibility="{Binding IsKnownPlaylist, Converter={StaticResource BoolToVis}}"
+                    Background="#0F2942" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding KnownPlaylistBannerText}" Foreground="#BAE6FD" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="{Binding Loc[SelectOnlyNewVideos]}" Command="{Binding SelectOnlyNewVideosCommand}"
+                            Visibility="{Binding HasNewVideos, Converter={StaticResource BoolToVis}}"
+                            Cursor="Hand" Background="#0284C7" Foreground="White" FontWeight="Bold" FontSize="11"
+                            BorderThickness="0" Padding="10,4" Margin="10,0,0,0">
+                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style></Button.Resources>
+                    </Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- 2. Paramètres Communs -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10"
+                BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Ligne 1 : Titre et Dossier -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,8">
+                    <TextBlock Text="{Binding Loc[Playlist]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding PlaylistTitle, UpdateSourceTrigger=PropertyChanged}"
+                             Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="8,5" FontSize="12"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,8">
+                    <TextBlock Text="{Binding Loc[DestinationFolder]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding TargetFolder, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                 BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="8,5" FontSize="11"/>
+                        <Button Grid.Column="1" Content="{Binding Loc[Browse]}" Command="{Binding BrowseFolderCommand}"
+                                Cursor="Hand" Background="{DynamicResource BorderBrushColor}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderThickness="0" Padding="10,5" Margin="6,0,0,0" FontSize="11"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Ligne 2 : Mode, Qualité commune, Modèle de nommage et Options -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource SubCardBackgroundBrush}" CornerRadius="6" Padding="2" Margin="0,0,14,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="{Binding Loc[MediaModeVideo]}" Command="{Binding SelectVideoModeCommand}" Cursor="Hand"
+                                    Padding="12,4" FontSize="11" FontWeight="SemiBold" BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsVideoMode}" Value="True">
+                                                <Setter Property="Background" Value="#2563EB"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                            </Button>
+                            <Button Content="{Binding Loc[MediaModeAudio]}" Command="{Binding SelectAudioModeCommand}" Cursor="Hand"
+                                    Padding="12,4" FontSize="11" FontWeight="SemiBold" BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAudioMode}" Value="True">
+                                                <Setter Property="Background" Value="#2563EB"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ComboBox Résolution vidéo -->
+                    <ComboBox ItemsSource="{Binding AvailableResolutions}" SelectedItem="{Binding SelectedResolution}"
+                              Visibility="{Binding IsVideoMode, Converter={StaticResource BoolToVis}}"
+                              Width="150" Height="26" VerticalAlignment="Center" FontSize="11"/>
+
+                    <!-- ComboBox Palier audio -->
+                    <ComboBox ItemsSource="{Binding AudioTierOptions}" SelectedItem="{Binding SelectedAudioTier}"
+                              Visibility="{Binding IsAudioMode, Converter={StaticResource BoolToVis}}"
+                              Width="220" Height="26" VerticalAlignment="Center" FontSize="11"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Loc[PlaylistNamingTemplateSelection]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" SelectedItem="{Binding SelectedNamingTemplate}"
+                              Width="130" Height="26" VerticalAlignment="Center" FontSize="11" Margin="0,0,10,0"/>
+
+                    <TextBlock Text="{Binding Loc[ContainerLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox ItemsSource="{Binding AvailableContainersList}" SelectedItem="{Binding SelectedContainer}"
+                              Width="95" Height="26" VerticalAlignment="Center" FontSize="11" Margin="0,0,10,0"/>
+                    <CheckBox Content="{Binding Loc[EmbedSubtitles]}" IsChecked="{Binding EmbedSubtitles, Mode=TwoWay}"
+                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3. Barre d'outils de Sélection & Statistiques -->
+        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10"
+                BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="12,8" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Boutons de sélection rapide -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding Loc[SelectAll]}" Command="{Binding SelectAllCommand}" Cursor="Hand"
+                            Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                            Padding="8,4" FontSize="11" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                    <Button Content="{Binding Loc[DeselectAll]}" Command="{Binding DeselectAllCommand}" Cursor="Hand"
+                            Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                            Padding="8,4" FontSize="11" Margin="0,0,6,0"/>
+                    <Button Content="{Binding Loc[InvertSelection]}" Command="{Binding InvertSelectionCommand}" Cursor="Hand"
+                            Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                            Padding="8,4" FontSize="11" Margin="0,0,6,0"/>
+                    <Button Content="{Binding Loc[DeselectExisting]}" Command="{Binding DeselectExistingDuplicatesCommand}" Cursor="Hand"
+                            Background="{DynamicResource SubCardBackgroundBrush}" Foreground="#38BDF8"
+                            BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                            Padding="8,4" FontSize="11" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                    <Button Content="{Binding Loc[SelectOnlyNewVideos]}" Command="{Binding SelectOnlyNewVideosCommand}" Cursor="Hand"
+                            Visibility="{Binding IsKnownPlaylist, Converter={StaticResource BoolToVis}}"
+                            Background="#065F46" Foreground="#A7F3D0"
+                            BorderBrush="#10B981" BorderThickness="1"
+                            Padding="8,4" FontSize="11" FontWeight="Bold" Margin="0,0,12,0"/>
+
+                    <Border Width="1" Background="{DynamicResource BorderBrushColor}" Margin="0,2,12,2"/>
+
+                    <!-- Saisie de plage : De N à M -->
+                    <TextBlock Text="{Binding Loc[RangeSelection]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Text="{Binding RangeFrom, UpdateSourceTrigger=PropertyChanged}" Width="36" Height="24" TextAlignment="Center"
+                             Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" FontSize="11" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Loc[RangeTo]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="6,0,6,0"/>
+                    <TextBox Text="{Binding RangeTo, UpdateSourceTrigger=PropertyChanged}" Width="36" Height="24" TextAlignment="Center"
+                             Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" FontSize="11" VerticalAlignment="Center"/>
+                    <Button Content="{Binding Loc[ApplyRange]}" Command="{Binding ApplyRangeCommand}" Cursor="Hand"
+                            Background="#0284C7" Foreground="White" BorderThickness="0"
+                            Padding="8,4" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,0">
+                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
+                    </Button>
+                </StackPanel>
+
+                <!-- Résumé Stats (Centre / Droite) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#1E293B" CornerRadius="6" Padding="8,4" Margin="0,0,8,0">
+                        <TextBlock Text="{Binding SelectionRatioText}" Foreground="#38BDF8" FontSize="11" FontWeight="Bold"/>
+                    </Border>
+                    <TextBlock Text="{Binding TotalDurationText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Border Background="#065F46" CornerRadius="6" Padding="8,4" Margin="0,0,8,0">
+                        <TextBlock Text="{Binding EstimatedTotalSizeText}" Foreground="#A7F3D0" FontSize="11" FontWeight="Bold"/>
+                    </Border>
+                    <TextBlock Text="{Binding FreeDiskSpaceText}" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 4. Liste des vidéos (Scrollable) -->
+        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10"
+                BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" Padding="8" Margin="0,0,0,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Entries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource SubCardBackgroundBrush}" CornerRadius="8" Padding="10,8" Margin="0,0,0,6"
+                                    BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Case à cocher -->
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              IsEnabled="{Binding IsAvailable}" VerticalAlignment="Center" Margin="0,0,10,0" Cursor="Hand"/>
+
+                                    <!-- Numéro de vidéo -->
+                                    <Border Grid.Column="1" Width="36" Height="24" Background="#1E293B" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding IndexStr}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Miniature -->
+                                    <Border Grid.Column="2" Width="64" Height="40" Background="#0F172A" CornerRadius="4" Margin="0,0,10,0" VerticalAlignment="Center" ClipToBounds="True">
+                                        <Grid>
+                                            <TextBlock Text="🎬" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Image Source="{Binding ThumbnailUrl}" Stretch="UniformToFill"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Titre, Durée & Badges -->
+                                    <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <Border Background="#334155" CornerRadius="3" Padding="4,1" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding DurationStr}" Foreground="#CBD5E1" FontSize="10"/>
+                                            </Border>
+                                            <!-- Badge NOUVELLE VIDÉO (Étape 6) -->
+                                            <Border Visibility="{Binding IsNewInPlaylist, Converter={StaticResource BoolToVis}}"
+                                                    Background="#065F46" BorderBrush="#10B981" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding DataContext.Loc[BadgeNewVideo], RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="#A7F3D0" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                            <!-- Badge Indisponible -->
+                                            <Border Visibility="{Binding IsAvailable, Converter={StaticResource InverseBoolToVis}}"
+                                                    Background="#7F1D1D" CornerRadius="3" Padding="6,1" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding UnavailableReason}" Foreground="#FCA5A5" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                            <!-- Badge Doublon / Conflit -->
+                                            <Border Visibility="{Binding HasDuplicateConflict, Converter={StaticResource BoolToVis}}"
+                                                    Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="3" Padding="6,1">
+                                                <TextBlock Text="{Binding ConflictBadgeText}" Foreground="#38BDF8" FontSize="10" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Statut de sélection localisé (ZÉRO TEXTE EN DUR) -->
+                                    <TextBlock Grid.Column="4" Text="{Binding SelectionStateText}" Foreground="{Binding SelectionStateColor}"
+                                               FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,4,0" FontSize="11"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- 5. Footer -->
+        <Grid Grid.Row="5">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Loc[PlaylistPrepFooterTip]}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{Binding Loc[Cancel]}" Command="{Binding CancelCommand}" Cursor="Hand"
+                        Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                        Padding="16,8" Margin="0,0,8,0" FontWeight="Medium">
+                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                </Button>
+                <Button Content="{Binding DownloadButtonText}" Command="{Binding StartDownloadCommand}" IsEnabled="{Binding CanDownload}" Cursor="Hand"
+                        Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Padding="22,8" FontSize="12">
+                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

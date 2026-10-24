@@ -1,0 +1,98 @@
+<Window x:Class="UberDownloader.Wpf.Views.FloatingBarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Loc[FloatingBarTitle]}"
+        Icon="Assets/Uber.ico"
+        Height="54" Width="640"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" WindowStartupLocation="Manual">
+    <Border Background="#1E293B" CornerRadius="27" BorderBrush="#3B82F6" BorderThickness="1.5" Margin="2" Padding="8,4">
+        <Grid VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Poignée Drag & Logo -->
+            <Border x:Name="DragHandle" Grid.Column="0" Background="Transparent" Cursor="SizeAll" Margin="4,0,8,0" VerticalAlignment="Center">
+                <TextBlock Text="⚡" FontSize="18" Foreground="#3B82F6" VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Cercle bleu Téléchargements en cours -->
+            <Border Grid.Column="1" Width="24" Height="24" CornerRadius="12" Background="#2563EB"
+                    Margin="2,0,8,0" VerticalAlignment="Center"
+                    ToolTip="{Binding Loc[ActiveDownloadsTooltip]}">
+                <TextBlock Text="{Binding ActiveDownloadsCount}" Foreground="White" FontWeight="Bold" FontSize="11"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Input URL compact -->
+            <TextBox x:Name="BarUrlBox" Grid.Column="2" Height="32" Padding="8,0" VerticalContentAlignment="Center"
+                     Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" FontSize="12">
+                <TextBox.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TextBox">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6">
+                                        <Grid>
+                                            <ScrollViewer x:Name="PART_ContentHost" Margin="4,0"/>
+                                            <TextBlock Text="{Binding Loc[FloatingBarPastePlaceholder]}" Foreground="#64748B" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ElementName=BarUrlBox, Path=Text}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TextBox.Resources>
+            </TextBox>
+
+            <!-- Bouton Paramètres (affiché uniquement quand un lien est rentré) -->
+            <Button x:Name="BarSettingsButton" Grid.Column="3" Content="⚙" Click="OnSettingsClicked"
+                    ToolTip="{Binding Loc[FloatingBarSettingsTooltip]}"
+                    Background="#334155" Foreground="#F8FAFC" BorderThickness="0" Height="32" Width="32" Margin="6,0,0,0" FontSize="14">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=BarUrlBox, Path=Text}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ElementName=BarUrlBox, Path=Text}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <!-- Bouton Télécharger -->
+            <Button Grid.Column="4" Content="{Binding Loc[FloatingBarDownloadButton]}" Click="OnDownloadClicked"
+                    Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Height="32" Padding="12,0" Margin="8,0,4,0"/>
+
+            <!-- Bouton Restaurer fenêtre complète -->
+            <Button Grid.Column="5" Content="⤢" Click="OnRestoreClicked" ToolTip="{Binding Loc[FloatingBarRestoreTooltip]}"
+                    Background="#334155" Foreground="#F8FAFC" BorderThickness="0" Height="32" Width="32" Margin="4,0" FontSize="14"/>
+
+            <!-- Bouton Masquer -->
+            <Button Grid.Column="6" Content="✕" Click="OnCloseClicked" ToolTip="{Binding Loc[FloatingBarCloseTooltip]}"
+                    Background="Transparent" Foreground="#94A3B8" BorderThickness="0" Height="32" Width="28" FontSize="12"/>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,88 @@
+name: Release Über-Downloader
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version de publication (ex: 1.0.0). Laisser vide pour utiliser la version du tag ou de Directory.Build.props.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Package Windows Distribution
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Execute automated distribution pipeline
+        shell: powershell
+        run: |
+          # Résolution du répertoire du projet
+          $targetDir = $PWD
+          if (Test-Path "Über-Downloader\build-distribution.ps1") {
+              $targetDir = Join-Path $PWD "Über-Downloader"
+              Set-Location $targetDir
+          }
+
+          # Résolution de la version
+          $inputVersion = "${{ github.event.inputs.version }}"
+          $refName = "${{ github.ref_name }}"
+          $buildVersion = ""
+
+          if (-not [string]::IsNullOrWhiteSpace($inputVersion)) {
+              $buildVersion = $inputVersion.Trim().TrimStart('v')
+          } elseif ($refName -match '^v?(\d+\.\d+(\.\d+)?)') {
+              $buildVersion = $Matches[1]
+          }
+
+          Write-Host "Lancement de la distribution avec la version : '$buildVersion'" -ForegroundColor Cyan
+          if (-not [string]::IsNullOrWhiteSpace($buildVersion)) {
+              .\build-distribution.ps1 -Version $buildVersion
+          } else {
+              .\build-distribution.ps1
+          }
+
+      - name: Locate Artifacts Directory
+        id: locate_dist
+        shell: powershell
+        run: |
+          if (Test-Path "dist\SHA256SUMS.txt") {
+              echo "DIST_PATH=dist" >> $env:GITHUB_ENV
+          } elseif (Test-Path "Über-Downloader\dist\SHA256SUMS.txt") {
+              echo "DIST_PATH=Über-Downloader/dist" >> $env:GITHUB_ENV
+          } else {
+              throw "Dossier dist introuvable après l'exécution du build."
+          }
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          name: Über-Downloader ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ env.DIST_PATH }}/UberDownloader-*-win-x64-portable.zip
+            ${{ env.DIST_PATH }}/UberDownloader-*-Standalone-win-x64.exe
+            ${{ env.DIST_PATH }}/installer/UberDownloader-*-Setup-x64.exe
+            ${{ env.DIST_PATH }}/SHA256SUMS.txt
