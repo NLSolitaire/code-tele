@@ -38,10 +38,16 @@ public partial class App : Application
                 string msg = $"{LocalizationService.Instance["CrashDialogMessage"]}\n\n{e.Exception.Message}";
                 MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Error);
                 e.Handled = true;
+
+                if (_mainWindow == null || !_mainWindow.IsLoaded)
+                {
+                    Shutdown();
+                }
             }
             catch
             {
                 // Prevent crash loop
+                Shutdown();
             }
         };
 

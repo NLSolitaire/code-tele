@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -124,7 +124,25 @@ public class SingleInstanceManager : IDisposable
     public void Dispose()
     {
         _pipeCts?.Cancel();
-        _mutex?.ReleaseMutex();
-        _mutex?.Dispose();
+        _pipeCts?.Dispose();
+        if (_mutex != null)
+        {
+            if (_isFirstInstance)
+            {
+                try
+                {
+                    _mutex.ReleaseMutex();
+                }
+                catch (ApplicationException)
+                {
+                    // Ignore if not owned or already released
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+            _mutex.Dispose();
+            _mutex = null;
+        }
     }
 }

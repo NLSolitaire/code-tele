@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:UberDownloader.Wpf.Views"
         xmlns:models="clr-namespace:UberDownloader.Core.Data;assembly=UberDownloader.Core"
         mc:Ignorable="d"
-        Title="{Binding Loc[AppTitle]}" Icon="Assets/Uber.ico" Height="650" Width="650" MinHeight="600" MinWidth="625"
+        Title="{Binding Loc[AppTitle]}" Icon="/Assets/Uber.ico" Height="650" Width="650" MinHeight="600" MinWidth="625"
         Background="{DynamicResource WindowBackgroundBrush}" WindowStartupLocation="CenterScreen">
     <Grid>
         <!-- VUE PRINCIPALE DES TÉLÉCHARGEMENTS -->
