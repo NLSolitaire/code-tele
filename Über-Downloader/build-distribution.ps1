@@ -81,6 +81,43 @@ if (Test-Path $publishedExe) {
     Copy-Item $publishedExe $standaloneExePath -Force
 }
 
+# 3.5 Approvisionnement des outils autonomes (yt-dlp, ffmpeg, ffprobe)
+Write-Host "[3.5/6] Intégration des outils autonomes (yt-dlp, FFmpeg, FFprobe)..." -ForegroundColor Cyan
+$toolsCacheDir = Join-Path $rootDir "tools_cache"
+$binDir = Join-Path $win64Dir "bin"
+New-Item -ItemType Directory -Path $toolsCacheDir -Force | Out-Null
+New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+
+$ytdlpCache = Join-Path $toolsCacheDir "yt-dlp.exe"
+if (-not (Test-Path $ytdlpCache) -or (Get-Item $ytdlpCache).Length -lt 5MB) {
+    Write-Host "Téléchargement de yt-dlp.exe autonome..." -ForegroundColor Yellow
+    Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile $ytdlpCache -UseBasicParsing
+}
+Copy-Item $ytdlpCache (Join-Path $binDir "yt-dlp.exe") -Force
+
+$ffmpegCache = Join-Path $toolsCacheDir "ffmpeg.exe"
+$ffprobeCache = Join-Path $toolsCacheDir "ffprobe.exe"
+if (-not (Test-Path $ffmpegCache) -or -not (Test-Path $ffprobeCache) -or (Get-Item $ffmpegCache).Length -lt 5MB) {
+    Write-Host "Téléchargement du pack FFmpeg autonome (yt-dlp FFmpeg-Builds)..." -ForegroundColor Yellow
+    $ffmpegZip = Join-Path $toolsCacheDir "ffmpeg.zip"
+    Invoke-WebRequest -Uri "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile $ffmpegZip -UseBasicParsing
+    
+    $tempExtract = Join-Path $toolsCacheDir "ffmpeg_extract"
+    if (Test-Path $tempExtract) { Remove-Item $tempExtract -Recurse -Force }
+    Expand-Archive -Path $ffmpegZip -DestinationPath $tempExtract -Force
+    
+    $extractedFfmpeg = Get-ChildItem -Path $tempExtract -Filter "ffmpeg.exe" -Recurse | Select-Object -First 1
+    $extractedFfprobe = Get-ChildItem -Path $tempExtract -Filter "ffprobe.exe" -Recurse | Select-Object -First 1
+    
+    if ($extractedFfmpeg) { Copy-Item $extractedFfmpeg.FullName $ffmpegCache -Force }
+    if ($extractedFfprobe) { Copy-Item $extractedFfprobe.FullName $ffprobeCache -Force }
+    
+    Remove-Item $tempExtract -Recurse -Force
+    Remove-Item $ffmpegZip -Force
+}
+Copy-Item $ffmpegCache (Join-Path $binDir "ffmpeg.exe") -Force
+Copy-Item $ffprobeCache (Join-Path $binDir "ffprobe.exe") -Force
+
 # 4. Création du package Portable
 Write-Host "[4/6] Préparation de l'archive portable ZIP..." -ForegroundColor Cyan
 New-Item -ItemType Directory -Path $portableStagingDir -Force | Out-Null
@@ -91,6 +128,7 @@ Copy-Item (Join-Path $rootDir "LICENSE") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "THIRD-PARTY-NOTICES.txt") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "README.md") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "Uber.ico") $portableStagingDir -Force
+Copy-Item $binDir $portableStagingDir -Recurse -Force
 
 $scriptsSrc = Join-Path $win64Dir "Scripts"
 if (Test-Path $scriptsSrc) {

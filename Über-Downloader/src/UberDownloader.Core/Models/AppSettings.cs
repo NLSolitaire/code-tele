@@ -15,7 +15,7 @@ public class AppSettings
     public string PlaylistNamingTemplate { get; set; } = "{index} - {title}";
     public bool AutoResumeOnStartup { get; set; } = true;
     public int MaxRetries { get; set; } = 3;
-    public bool AutoSniff { get; set; } = true;
+    public bool AutoSniff { get; set; } = false;
     public string ExtractionBrowser { get; set; } = "Chromium";
     public string BrowserCookies { get; set; } = "aucun";
     

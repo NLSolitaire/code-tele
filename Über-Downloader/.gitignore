@@ -20,6 +20,7 @@ TestResults/
 dist/
 publish/
 output/
+tools_cache/
 [Ll]ancer-UberDownloader.exe
 
 # Temporary media downloads & fragment files

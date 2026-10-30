@@ -19,7 +19,7 @@ Pour installer et tester Über-Downloader sur votre PC :
 1. Rendez-vous dans la section **[Releases](https://github.com/NLSolitaire/code-tele/releases)**.
 2. Choisissez le format qui vous convient :
    - **📦 Installeur standard (`UberDownloader-v1.0.0-Setup-x64.exe`)** : Installe l'application localement dans votre profil utilisateur (sans nécessiter de droits administrateur), avec raccourcis menu Démarrer et Bureau.
-   - **💼 Archive Portable (`UberDownloader-v1.0.0-win-x64-portable.zip`)** : Ne nécessite aucune installation. Décompressez simplement le dossier où vous le souhaitez (clé USB, dossier personnel) et lancez `UberDownloader.exe`. Toutes les données et configurations restent isolées dans le sous-dossier local `data/`.
+   - **💼 Archive Portable (`UberDownloader-v1.0.0-win-x64-portable.zip`)** : Ne nécessite aucune installation ni dépendance (.NET, yt-dlp et FFmpeg sont directement intégrés). Décompressez simplement le dossier où vous le souhaitez (clé USB, dossier personnel) et lancez `UberDownloader.exe`. Toutes les données et configurations restent isolées dans le sous-dossier local `data/`.
 3. ⚠️ **Avertissement Windows SmartScreen ("Windows a protégé votre PC")** :
    Comme l'application est un nouveau projet open-source non signé avec un certificat payant de grande autorité, Windows SmartScreen affichera un message bleu au premier lancement.  
    👉 Cliquez simplement sur **« Informations complémentaires »** puis sur le bouton **« Exécuter quand même »**.

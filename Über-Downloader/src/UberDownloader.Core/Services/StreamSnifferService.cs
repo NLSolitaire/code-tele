@@ -18,7 +18,12 @@ public class StreamSnifferService
 
         if (!File.Exists(scriptPath))
         {
-            return new SniffResult(false, string.Empty, string.Empty, string.Empty, $"Script introuvable: {scriptPath}");
+            return new SniffResult(false, string.Empty, string.Empty, string.Empty, $"Script d'analyse introuvable : {scriptPath}");
+        }
+
+        if (!ToolLocator.IsPythonInstalled())
+        {
+            return new SniffResult(false, string.Empty, string.Empty, string.Empty, "Python n'est pas détecté sur ce système. L'extraction de flux web avancée nécessite Python et Playwright.");
         }
 
         string headlessFlag = headless ? "--headless" : string.Empty;
