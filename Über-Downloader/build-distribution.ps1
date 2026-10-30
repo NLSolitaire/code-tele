@@ -135,6 +135,11 @@ if (Test-Path $scriptsSrc) {
     Copy-Item $scriptsSrc $portableStagingDir -Recurse -Force
 }
 
+$playwrightSrc = Join-Path $win64Dir ".playwright"
+if (Test-Path $playwrightSrc) {
+    Copy-Item $playwrightSrc $portableStagingDir -Recurse -Force
+}
+
 # Flag de mode portable
 New-Item -ItemType File -Path (Join-Path $portableStagingDir "portable.flag") -Force | Out-Null
 

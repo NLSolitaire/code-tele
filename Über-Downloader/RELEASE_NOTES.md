@@ -42,9 +42,9 @@ Aucune commande supplémentaire, aucun script Python et aucun outil externe ne s
 - [ ] Tester le changement de thème (Nuit / Jour / Système) et de langue (FR / EN / ES) dans les Paramètres.
 - [ ] Cliquer sur le bouton **Ko-fi** pour s'assurer qu'il ouvre bien `https://ko-fi.com/yddraiggoch`.
 
-### 6. Extraction Web Sniffer (Optionnelle / Expérimentale)
-- [ ] Cette fonctionnalité est désactivée par défaut dans les Paramètres.
-- [ ] Si activée sans environnement Python/Playwright sur le PC, vérifier qu'elle affiche un message propre et explicite indiquant que Python est nécessaire, sans faire planter l'application.
+### 6. Extraction Web Sniffer (Playwright C# 100% Intégré)
+- [ ] Le sniffer web dynamique est désormais **100% natif C#** grâce à `Microsoft.Playwright`. **Aucune installation de Python n'est nécessaire.**
+- [ ] Il s'appuie automatiquement sur **Microsoft Edge** (présent par défaut sur tout Windows 10/11) pour capturer les flux enfouis (.m3u8, .mpd) et filtrer les publicités sans surcharger la machine.
 
 ### 7. Journalisation & Retours
 - [ ] En cas de bug ou d'erreur, ouvrir l'onglet Paramètres -> « Journal des événements » pour copier les logs ou cliquer sur « Ouvrir le dossier AppData ».
