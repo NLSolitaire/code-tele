@@ -196,8 +196,15 @@
                         <!-- Modèle de nommage des playlists -->
                         <TextBlock Text="{Binding Loc[PlaylistNamingTemplate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Loc[PlaylistNamingTemplateDesc]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,6"/>
-                        <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" Text="{Binding PlaylistNamingTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  IsEditable="True" Height="34" Width="280" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+                        <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" SelectedItem="{Binding PlaylistNamingTemplate, Mode=TwoWay}"
+                                  Height="34" Width="280" HorizontalAlignment="Left" Margin="0,0,0,14">
+                            <!-- Les modèles commencent par '{' : sans ItemTemplate, WPF les traite comme markup et la sélection reste vide -->
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
                         <!-- Configuration interactive du Raccourci Clavier Global -->
                         <TextBlock Text="{Binding Loc[GlobalHotkeyLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -376,33 +383,27 @@
                         </StackPanel>
                         <ComboBox ItemsSource="{Binding AvailableLiveRecordModes}" SelectedItem="{Binding LiveRecordMode, Mode=TwoWay}" Height="34" Width="320" HorizontalAlignment="Left" Margin="0,0,0,14"/>
 
-                        <!-- 6.5 Limite de durée libre avec case Illimité et flèches Min 1 min / Max 300 min -->
-                        <TextBlock Text="{Binding Loc[LiveMaxDurationLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <CheckBox Content="{Binding Loc[Unlimited]}" IsChecked="{Binding IsLiveDurationUnlimited, Mode=TwoWay}"
-                                      Foreground="#F8FAFC" VerticalAlignment="Center" Margin="0,0,16,0" Cursor="Hand"/>
-                            <Grid Width="160" VerticalAlignment="Center">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding LiveMaxDurationCustom, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                         IsEnabled="{Binding IsLiveDurationCustomEnabled}"
-                                         Height="34" Padding="8,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                         Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" FontWeight="SemiBold"/>
-                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                    <Button Content="▲" Command="{Binding IncrementLiveDurationCommand}"
-                                            IsEnabled="{Binding IsLiveDurationCustomEnabled}"
-                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
-                                    <Button Content="▼" Command="{Binding DecrementLiveDurationCommand}"
-                                            IsEnabled="{Binding IsLiveDurationCustomEnabled}"
-                                            Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                        <TextBlock Text="{Binding LiveDurationValidationMessage}" Foreground="#EF4444" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6"
-                                   Visibility="{Binding HasLiveDurationError, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="{Binding Loc[LiveDurationHint]}" Foreground="#64748B" FontSize="11" Margin="0,0,0,14"/>
+                        <!-- Marge d'espace disque minimale pour l'enregistrement des directs -->
+                        <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginDesc]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,6"/>
+                        <Grid Width="220" HorizontalAlignment="Left" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding LiveDiskSpaceMargin, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Height="34" Padding="8,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                     Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource BorderBrushColor}" FontWeight="SemiBold"/>
+                            <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                <Button Content="▲" Command="{Binding IncrementDiskMarginCommand}"
+                                        Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
+                                <Button Content="▼" Command="{Binding DecrementDiskMarginCommand}"
+                                        Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="{Binding LiveDiskSpaceValidationMessage}" Foreground="#EF4444" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6"
+                                   Visibility="{Binding HasLiveDiskSpaceError, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginHint]}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,14"/>
 
                         <!-- 6.6 Action coupure -->
                         <TextBlock Text="{Binding Loc[LiveInterruptionActionLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
@@ -515,9 +516,9 @@
                                      IsDocumentEnabled="True"
                                      PreviewMouseWheel="OnLogRichTextBoxPreviewMouseWheel">
                             <RichTextBox.ContextMenu>
-                                <ContextMenu Background="#1E293B" BorderBrush="#334155">
-                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[CopyShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.Copy" Foreground="#F8FAFC"/>
-                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[SelectAllShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.SelectAll" Foreground="#F8FAFC"/>
+                                <ContextMenu Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}">
+                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[CopyShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.Copy" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <MenuItem Header="{Binding PlacementTarget.DataContext.Loc[SelectAllShortcut], RelativeSource={RelativeSource AncestorType=ContextMenu}}" Command="ApplicationCommands.SelectAll" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </ContextMenu>
                             </RichTextBox.ContextMenu>
                         </RichTextBox>
@@ -527,41 +528,35 @@
 
             <!-- Onglet 5 : À propos & Licence -->
             <TabItem Header="{Binding Loc[TabAbout]}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
-                    <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel"
+                              HorizontalContentAlignment="Center">
+                    <StackPanel MaxWidth="720" HorizontalAlignment="Center">
                         
                         <!-- Header App + Version -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                        <TextBlock Text="⚡" FontSize="20" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Loc[AppTitle]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding Loc[AboutDescription]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                            <StackPanel HorizontalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                                    <TextBlock Text="⚡" FontSize="20" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding Loc[AppTitle]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                
-                                <Border Grid.Column="1" Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="12" Padding="12,5" VerticalAlignment="Center">
+                                <Border Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="12" Padding="12,5" HorizontalAlignment="Center" Margin="0,0,0,10">
                                     <TextBlock Text="{Binding Loc[AppVersionLabel]}" Foreground="#93C5FD" FontWeight="Bold" FontSize="11"/>
                                 </Border>
-                            </Grid>
+                                <TextBlock Text="{Binding Loc[AboutDescription]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
+                            </StackPanel>
                         </Border>
 
                         <!-- Carte Soutien Ko-fi -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="#E11D48" BorderThickness="1.5" CornerRadius="10" Padding="16" Margin="0,0,0,14">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <StackPanel HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
                                     <TextBlock Text="☕" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Loc[AboutSupportTitle]}" FontSize="14" FontWeight="Bold" Foreground="#F43F5E" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Loc[AboutSupportText]}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18"/>
+                                <TextBlock Text="{Binding Loc[AboutSupportText]}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18" TextAlignment="Center"/>
                                 <Button Content="{Binding Loc[SupportKofiButton]}" Command="{Binding OpenKofiCommand}" Cursor="Hand"
                                         Background="#FF5E5B" Foreground="White" FontWeight="Bold" FontSize="12"
-                                        BorderThickness="0" Padding="16,8" HorizontalAlignment="Left">
+                                        BorderThickness="0" Padding="16,8" HorizontalAlignment="Center">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="8"/>
@@ -574,20 +569,20 @@
                         <!-- Carte Licence et Composants tiers -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
                                     <TextBlock Text="📜" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Loc[AboutLicenseTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Loc[AboutLicenseText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding Loc[AboutLicenseText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10" TextAlignment="Center"/>
                                 
                                 <Separator Background="{DynamicResource BorderBrushColor}" Margin="0,6,0,12"/>
 
-                                <TextBlock Text="{Binding Loc[AboutThirdPartyTitle]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                                <TextBlock Text="{Binding Loc[AboutThirdPartyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18"/>
+                                <TextBlock Text="{Binding Loc[AboutThirdPartyTitle]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" TextAlignment="Center"/>
+                                <TextBlock Text="{Binding Loc[AboutThirdPartyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="18" TextAlignment="Center"/>
                                 
                                 <Button Content="{Binding Loc[AboutOpenNoticesButton]}" Command="{Binding OpenThirdPartyNoticesCommand}" Cursor="Hand"
                                         Background="{DynamicResource CardBackgroundBrush}" Foreground="#38BDF8" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
-                                        Padding="12,6" HorizontalAlignment="Left" FontSize="11" FontWeight="SemiBold">
+                                        Padding="12,6" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="6"/>
@@ -600,22 +595,22 @@
                         <!-- Carte Avis Juridique & Responsabilité -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
                                     <TextBlock Text="⚖️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Loc[AboutDisclaimerTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Loc[AboutDisclaimerText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                                <TextBlock Text="{Binding Loc[AboutDisclaimerText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18" TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Carte Vie Privée -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,8">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
                                     <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Loc[AboutPrivacyTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Loc[AboutPrivacyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                                <TextBlock Text="{Binding Loc[AboutPrivacyText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18" TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
 

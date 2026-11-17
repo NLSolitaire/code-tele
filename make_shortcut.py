@@ -38,14 +38,17 @@ def create_desktop_shortcut(hotkey="CTRL+SHIFT+L"):
     
     desktop_dir, programs_dir = get_windows_special_folders()
     
-    shortcut_desktop = os.path.join(desktop_dir, "U-DWN.lnk")
-    shortcut_programs = os.path.join(programs_dir, "U-DWN.lnk")
+    shortcut_desktop = os.path.join(desktop_dir, "The Whatever Downloader.lnk")
+    shortcut_programs = os.path.join(programs_dir, "The Whatever Downloader.lnk")
 
     # Nettoyage des anciens raccourcis
     old_shortcuts = [
         os.path.join(desktop_dir, "Téléchargeur Vidéo.lnk"),
+        os.path.join(desktop_dir, "U-DWN.lnk"),
+        os.path.join(desktop_dir, "Über-Downloader.lnk"),
         os.path.join(os.environ.get("USERPROFILE", ""), "Desktop", "Téléchargeur Vidéo.lnk"),
-        os.path.join(os.environ.get("USERPROFILE", ""), "Desktop", "U-DWN.lnk")
+        os.path.join(os.environ.get("USERPROFILE", ""), "Desktop", "U-DWN.lnk"),
+        os.path.join(os.environ.get("USERPROFILE", ""), "Desktop", "Über-Downloader.lnk")
     ]
     for old in old_shortcuts:
         if old != shortcut_desktop and os.path.exists(old):

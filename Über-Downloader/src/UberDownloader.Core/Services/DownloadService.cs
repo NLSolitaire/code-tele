@@ -813,6 +813,27 @@ public class DownloadService
             maxDuration = parsedDuration;
         }
 
+        // Contrôle préalable de la marge d'espace disque disponible
+        long marginBytes = 500L * 1024 * 1024;
+        if (DiskSpaceHelper.TryParseDiskSpace(settings.LiveDiskSpaceMargin, out long parsedMargin, out _))
+        {
+            marginBytes = parsedMargin;
+        }
+
+        long availableFreeSpace = DiskSpaceHelper.GetFreeDiskSpace(folder);
+        if (availableFreeSpace <= marginBytes)
+        {
+            item.Status = JobStatus.Error;
+            string driveName = Path.GetPathRoot(folder) ?? "C:\\";
+            item.ErrorMessage = LocalizationService.Instance.Format(
+                "LiveDiskSpaceLimitReachedMessage",
+                driveName,
+                DiskSpaceHelper.FormatDiskSpace(marginBytes));
+            Logger.Log($"[Direct Live] {item.ErrorMessage}", "ERROR");
+            onProgress(item);
+            return;
+        }
+
         item.Status = JobStatus.Downloading;
         item.IsLive = true;
         item.IsStopLiveRequested = false;
@@ -874,15 +895,18 @@ public class DownloadService
                     break;
                 }
 
-                // 6.7 Contrôle espace disque : arrêt si moins de 20 Mo d'espace libre
+                // 6.7 Contrôle espace disque selon la marge configurée
                 try
                 {
                     string root = Path.GetPathRoot(folder) ?? "C:\\";
                     var drive = new DriveInfo(root);
-                    if (drive.AvailableFreeSpace < 20L * 1024 * 1024)
+                    if (drive.AvailableFreeSpace <= marginBytes)
                     {
                         diskSpaceLow = true;
-                        item.ErrorMessage = "Espace disque insuffisant (< 20 Mo restants). L'enregistrement a été arrêté et sauvegardé.";
+                        item.ErrorMessage = LocalizationService.Instance.Format(
+                            "LiveDiskSpaceMarginReachedLog",
+                            DiskSpaceHelper.FormatDiskSpace(marginBytes));
+                        Logger.Log($"[Direct Live] {item.ErrorMessage}", "WARN");
                         try { proc.Kill(entireProcessTree: true); } catch { }
                         break;
                     }

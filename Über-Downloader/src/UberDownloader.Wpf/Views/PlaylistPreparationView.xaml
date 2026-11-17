@@ -164,7 +164,13 @@
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Loc[PlaylistNamingTemplateSelection]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" SelectedItem="{Binding SelectedNamingTemplate}"
-                              Width="130" Height="26" VerticalAlignment="Center" FontSize="11" Margin="0,0,10,0"/>
+                              Width="180" Height="26" VerticalAlignment="Center" FontSize="11" Margin="0,0,10,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Mode=OneWay}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
                     <TextBlock Text="{Binding Loc[ContainerLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <ComboBox ItemsSource="{Binding AvailableContainersList}" SelectedItem="{Binding SelectedContainer}"

@@ -392,8 +392,27 @@ public partial class MainViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
+        CheckDownloadFolderValidity();
         await LoadHistoryAsync();
         await HandleStartupQueueAsync();
+    }
+
+    private void CheckDownloadFolderValidity()
+    {
+        try
+        {
+            string folder = _settingsService.Settings.DownloadFolder;
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            {
+                string displayFolder = string.IsNullOrWhiteSpace(folder) ? "(vide / non défini)" : folder;
+                MessageBox.Show(
+                    string.Format(Loc["InvalidDownloadFolderMessage"], displayFolder),
+                    Loc["InvalidDownloadFolderTitle"],
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+        catch { }
     }
 
     private async Task HandleStartupQueueAsync()
@@ -970,6 +989,27 @@ public partial class MainViewModel : ObservableObject
         bool isLiveUrl = (CurrentInspection?.IsLive ?? false) ||
                          url.Contains("twitch.tv", StringComparison.OrdinalIgnoreCase) ||
                          url.Contains("kick.com", StringComparison.OrdinalIgnoreCase);
+
+        if (isLiveUrl)
+        {
+            long marginBytes = 500L * 1024 * 1024;
+            if (DiskSpaceHelper.TryParseDiskSpace(_settingsService.Settings.LiveDiskSpaceMargin, out long parsedMargin, out _))
+            {
+                marginBytes = parsedMargin;
+            }
+
+            long freeSpace = DiskSpaceHelper.GetFreeDiskSpace(baseFolder);
+            if (freeSpace <= marginBytes)
+            {
+                string driveName = Path.GetPathRoot(baseFolder) ?? "C:\\";
+                MessageBox.Show(
+                    string.Format(Loc["LiveDiskSpaceLimitReachedMessage"], driveName, DiskSpaceHelper.FormatDiskSpace(marginBytes)),
+                    Loc["LiveDiskSpaceLimitReachedTitle"],
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+        }
 
         var item = new DownloadItem
         {

@@ -2,7 +2,7 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 ================================================================================
 
-Über-Downloader incorporates or interacts with third-party software components.
+The Whatever Downloader incorporates or interacts with third-party software components.
 This file contains licensing and copyright notices for these components.
 
 --------------------------------------------------------------------------------

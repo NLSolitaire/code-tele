@@ -1,10 +1,10 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title Über-Downloader
+title The Whatever Downloader
 
 echo ==================================================
-echo               Über-Downloader
+echo              The Whatever Downloader
 echo ==================================================
 echo ⏳ Mise à jour et vérification du code...
 

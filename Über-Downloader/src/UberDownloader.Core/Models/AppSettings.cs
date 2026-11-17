@@ -23,6 +23,7 @@ public class AppSettings
     public string LiveEngine { get; set; } = "Streamlink (recommandé)"; // Streamlink (recommandé), yt-dlp
     public string LiveRecordMode { get; set; } = "Enregistrer les directs depuis le clic"; // Enregistrer les directs depuis le début, Enregistrer les directs depuis le clic
     public string LiveMaxDuration { get; set; } = "Illimité";
+    public string LiveDiskSpaceMargin { get; set; } = "500 Mo";
     public string LiveInterruptionAction { get; set; } = "Demander à chaque fois";
     
     // Paramètres avancés Vidéo

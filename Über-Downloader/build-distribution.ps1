@@ -1,5 +1,5 @@
 # ==============================================================================
-# Script de génération du package de distribution publique — Über-Downloader
+# Script de génération du package de distribution publique — The Whatever Downloader
 # ==============================================================================
 
 param(
@@ -30,7 +30,7 @@ while ($versionParts.Count -lt 4) {
 $fullAssemblyVersion = ($versionParts[0..3]) -join '.'
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "   Distribution Über-Downloader v$Version" -ForegroundColor Cyan
+Write-Host "   Distribution The Whatever Downloader v$Version" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
 # 2. Arrêt des processus en cours
@@ -40,9 +40,9 @@ Get-Process -Name "UberDownloader*" -ErrorAction SilentlyContinue | Stop-Process
 $distDir = Join-Path $rootDir "dist"
 $win64Dir = Join-Path $distDir "win-x64"
 $installerDir = Join-Path $distDir "installer"
-$portableStagingDir = Join-Path $distDir "UberDownloader-v$Version-win-x64-portable"
-$portableZipPath = Join-Path $distDir "UberDownloader-v$Version-win-x64-portable.zip"
-$standaloneExePath = Join-Path $distDir "UberDownloader-v$Version-Standalone-win-x64.exe"
+$portableStagingDir = Join-Path $distDir "TheWhateverDownloader-v$Version-win-x64-portable"
+$portableZipPath = Join-Path $distDir "TheWhateverDownloader-v$Version-win-x64-portable.zip"
+$standaloneExePath = Join-Path $distDir "TheWhateverDownloader-v$Version-Standalone-win-x64.exe"
 $shaSumsPath = Join-Path $distDir "SHA256SUMS.txt"
 
 # Nettoyage préalable de dist/
@@ -123,7 +123,7 @@ Write-Host "[4/6] Préparation de l'archive portable ZIP..." -ForegroundColor Cy
 New-Item -ItemType Directory -Path $portableStagingDir -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $portableStagingDir "data") -Force | Out-Null
 
-Copy-Item $publishedExe (Join-Path $portableStagingDir "UberDownloader.exe") -Force
+Copy-Item $publishedExe (Join-Path $portableStagingDir "TheWhateverDownloader.exe") -Force
 Copy-Item (Join-Path $rootDir "LICENSE") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "THIRD-PARTY-NOTICES.txt") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "README.md") $portableStagingDir -Force

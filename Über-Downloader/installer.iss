@@ -1,13 +1,13 @@
 ; ==============================================================================
-; Script Inno Setup pour Über-Downloader
+; Script Inno Setup pour The Whatever Downloader
 ; Installeur autonome sans privilèges administrateur requis (localappdata)
 ; ==============================================================================
 
-#define MyAppName "Über-Downloader"
+#define MyAppName "The Whatever Downloader"
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.0"
 #endif
-#define MyAppPublisher "Über-Downloader Open Source Project"
+#define MyAppPublisher "The Whatever Downloader Open Source Project"
 #define MyAppURL "https://ko-fi.com/yddraiggoch"
 #define MyAppUpdatesURL "https://github.com/NLSolitaire/code-tele/releases"
 #define MyAppSupportURL "https://github.com/NLSolitaire/code-tele/issues"
@@ -21,11 +21,11 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppSupportURL}
 AppUpdatesURL={#MyAppUpdatesURL}
-DefaultDirName={localappdata}\Programs\Uber-Downloader
+DefaultDirName={localappdata}\Programs\The-Whatever-Downloader
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
 OutputDir=dist\installer
-OutputBaseFilename=UberDownloader-v{#MyAppVersion}-Setup-x64
+OutputBaseFilename=TheWhateverDownloader-v{#MyAppVersion}-Setup-x64
 SetupIconFile=Uber.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -44,7 +44,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "startup"; Description: "Lancer Über-Downloader au démarrage de Windows"; GroupDescription: "Démarrage :"; Flags: unchecked
+Name: "startup"; Description: "Lancer The Whatever Downloader au démarrage de Windows"; GroupDescription: "Démarrage :"; Flags: unchecked
 
 [Files]
 Source: "dist\win-x64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion

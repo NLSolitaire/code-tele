@@ -3,10 +3,10 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <Product>Über-Downloader</Product>
-    <Company>Über-Downloader Open Source Project</Company>
-    <Authors>Über-Downloader Contributors</Authors>
-    <Copyright>Copyright © 2026 Über-Downloader Contributors</Copyright>
+    <Product>The Whatever Downloader</Product>
+    <Company>The Whatever Downloader Open Source Project</Company>
+    <Authors>The Whatever Downloader Contributors</Authors>
+    <Copyright>Copyright © 2026 The Whatever Downloader Contributors</Copyright>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
   </PropertyGroup>
 </Project>

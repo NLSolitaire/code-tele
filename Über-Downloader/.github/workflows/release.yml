@@ -1,4 +1,4 @@
-name: Release Über-Downloader
+name: Release The Whatever Downloader
 
 on:
   push:
@@ -77,12 +77,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          name: Über-Downloader ${{ github.ref_name }}
+          name: The Whatever Downloader ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            ${{ env.DIST_PATH }}/UberDownloader-*-win-x64-portable.zip
-            ${{ env.DIST_PATH }}/UberDownloader-*-Standalone-win-x64.exe
-            ${{ env.DIST_PATH }}/installer/UberDownloader-*-Setup-x64.exe
+            ${{ env.DIST_PATH }}/TheWhateverDownloader-*-win-x64-portable.zip
+            ${{ env.DIST_PATH }}/TheWhateverDownloader-*-Standalone-win-x64.exe
+            ${{ env.DIST_PATH }}/installer/TheWhateverDownloader-*-Setup-x64.exe
             ${{ env.DIST_PATH }}/SHA256SUMS.txt

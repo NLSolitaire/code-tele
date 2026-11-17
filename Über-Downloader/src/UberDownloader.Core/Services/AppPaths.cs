@@ -22,10 +22,20 @@ public static class AppPaths
             }
             else
             {
-                _dataDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Über-Downloader"
-                );
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string newDir = Path.Combine(appData, "The-Whatever-Downloader");
+                string oldDir = Path.Combine(appData, "Über-Downloader");
+
+                if (!Directory.Exists(newDir) && Directory.Exists(oldDir))
+                {
+                    try
+                    {
+                        Directory.Move(oldDir, newDir);
+                    }
+                    catch { }
+                }
+
+                _dataDirectory = Directory.Exists(newDir) ? newDir : (Directory.Exists(oldDir) ? oldDir : newDir);
             }
 
             try

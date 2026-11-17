@@ -76,12 +76,6 @@ public static class LiveDurationHelper
             return false;
         }
 
-        if (totalSeconds > 300 * 60)
-        {
-            errorMessage = "La durée maximale est de 300 min (5 heures).";
-            return false;
-        }
-
         duration = TimeSpan.FromSeconds(totalSeconds);
         return true;
     }

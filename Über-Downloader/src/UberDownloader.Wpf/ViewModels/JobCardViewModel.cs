@@ -296,6 +296,41 @@ public partial class JobCardViewModel : ObservableObject
         }
     }
 
+    public bool IsAudio => !IsPlaylist && (
+        IsAudioQuality(_item.Quality) ||
+        IsAudioContainer(_item.ContainerFormat) ||
+        IsAudioFile(_item.OutputPath)
+    );
+
+    public bool IsAudioPlaylist => IsPlaylist && (
+        (Playlist != null && IsAudioQuality(Playlist.PreferredQuality)) ||
+        (ChildCards.Count > 0 && ChildCards.All(c => c.IsAudio))
+    );
+
+    private static bool IsAudioQuality(string? quality)
+    {
+        if (string.IsNullOrWhiteSpace(quality)) return false;
+        string q = quality.ToLowerInvariant();
+        return q.Contains("mp3") || q.Contains("audio") || q.Contains("aac") ||
+               q.Contains("flac") || q.Contains("sans perte") || q.Contains("lossless") ||
+               q.Contains("hi-res") || q.Contains("kb/s") || q.Contains("kbit/s");
+    }
+
+    private static bool IsAudioContainer(string? container)
+    {
+        if (string.IsNullOrWhiteSpace(container)) return false;
+        string c = container.ToLowerInvariant();
+        return c.Equals("mp3") || c.Equals("m4a") || c.Equals("flac") ||
+               c.Equals("wav") || c.Equals("opus") || c.Equals("aac") || c.Equals("ogg");
+    }
+
+    private static bool IsAudioFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        string ext = Path.GetExtension(path).ToLowerInvariant();
+        return ext is ".mp3" or ".m4a" or ".flac" or ".wav" or ".opus" or ".aac" or ".ogg";
+    }
+
     public string CharacteristicsUrl => !string.IsNullOrWhiteSpace(_item.Url) ? _item.Url : "--";
     public string CharacteristicsResolution => !string.IsNullOrWhiteSpace(_item.VideoResolution) ? _item.VideoResolution : (!string.IsNullOrWhiteSpace(_item.Quality) ? _item.Quality : "Auto");
     public string CharacteristicsContainer
@@ -421,6 +456,8 @@ public partial class JobCardViewModel : ObservableObject
         OnPropertyChanged(nameof(IsLiveDownloading));
         OnPropertyChanged(nameof(IsLiveInterrupted));
         OnPropertyChanged(nameof(IsProcessing));
+        OnPropertyChanged(nameof(IsAudio));
+        OnPropertyChanged(nameof(IsAudioPlaylist));
         OnPropertyChanged(nameof(CharacteristicsUrl));
         OnPropertyChanged(nameof(CharacteristicsResolution));
         OnPropertyChanged(nameof(CharacteristicsContainer));

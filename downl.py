@@ -23,7 +23,7 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 # --- Configuration & Constantes ---
-APP_NAME = "U-DWN"
+APP_NAME = "The Whatever Downloader"
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(APP_DIR, "settings.json")
 LOG_FILE = os.path.join(APP_DIR, "u_dwn.log")

@@ -11,7 +11,7 @@ namespace UberDownloaderLauncher
         {
             try
             {
-                Console.Title = "Über-Downloader";
+                Console.Title = "The Whatever Downloader";
             }
             catch { }
 
@@ -41,7 +41,7 @@ namespace UberDownloaderLauncher
 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("==================================================");
-            Console.WriteLine("              Über-Downloader");
+            Console.WriteLine("           The Whatever Downloader");
             Console.WriteLine("==================================================");
             Console.ResetColor();
 

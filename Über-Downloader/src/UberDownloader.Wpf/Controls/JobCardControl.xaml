@@ -26,8 +26,14 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="Text" Value="🎬"/>
                             <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAudio}" Value="True">
+                                    <Setter Property="Text" Value="🎵"/>
+                                </DataTrigger>
                                 <DataTrigger Binding="{Binding IsPlaylist}" Value="True">
                                     <Setter Property="Text" Value="📑"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsAudioPlaylist}" Value="True">
+                                    <Setter Property="Text" Value="🎶"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -512,7 +518,11 @@
                                         <TextBlock Text="{Binding IndexStr}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🎵 " FontSize="11" VerticalAlignment="Center"
+                                                       Visibility="{Binding IsAudio, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                             <TextBlock Text="{Binding StatusDetail}" Foreground="#60A5FA" FontSize="10" Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding SizeStr}" Foreground="#94A3B8" FontSize="10" Margin="0,0,8,0"/>

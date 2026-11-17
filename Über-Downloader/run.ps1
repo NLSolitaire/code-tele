@@ -1,4 +1,4 @@
-# Script de lancement propre de Uber-Downloader
+# Script de lancement propre de The Whatever Downloader
 Get-Process -Name "UberDownloader*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
 Write-Host "Compilation de la solution..." -ForegroundColor Cyan

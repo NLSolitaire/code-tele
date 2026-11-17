@@ -11,6 +11,9 @@ public static class ThemeService
     private static string _currentMode = "Dark";
     private static bool _listenerAttached;
 
+    public static event Action? ThemeChanged;
+    public static bool IsDark { get; private set; } = true;
+
     public static void Initialize(string initialMode)
     {
         if (!_listenerAttached)
@@ -43,7 +46,9 @@ public static class ThemeService
 
         if (string.Equals(themeChoice, "Light", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(themeChoice, "Jour", StringComparison.OrdinalIgnoreCase) ||
-            themeChoice.Contains("Jour", StringComparison.OrdinalIgnoreCase))
+            string.Equals(themeChoice, "Día", StringComparison.OrdinalIgnoreCase) ||
+            themeChoice.Contains("Jour", StringComparison.OrdinalIgnoreCase) ||
+            themeChoice.Contains("Día", StringComparison.OrdinalIgnoreCase))
         {
             isDark = false;
         }
@@ -58,7 +63,9 @@ public static class ThemeService
             isDark = IsSystemDark();
         }
 
+        IsDark = isDark;
         ApplyColors(isDark);
+        ThemeChanged?.Invoke();
     }
 
     private static bool IsSystemDark()

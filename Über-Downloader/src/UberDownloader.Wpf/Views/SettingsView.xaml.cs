@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using UberDownloader.Core.Services;
+using UberDownloader.Wpf.Services;
 using UberDownloader.Wpf.ViewModels;
 
 namespace UberDownloader.Wpf.Views;
@@ -22,6 +23,22 @@ public partial class SettingsView : UserControl
         Loaded += OnLoaded;
         PreviewKeyDown += OnPreviewKeyDown;
         LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (!string.IsNullOrEmpty(_lastRawLogs))
+            {
+                UpdateLogDocument(_lastRawLogs);
+            }
+            else
+            {
+                UpdateLogDocument(Logger.ReadAllLogs());
+            }
+        });
     }
 
     private void OnLanguageChanged()
@@ -94,10 +111,13 @@ public partial class SettingsView : UserControl
     public void UpdateLogDocument(string rawLogs)
     {
         _lastRawLogs = rawLogs;
+        bool isDark = ThemeService.IsDark;
         var doc = new FlowDocument
         {
             PagePadding = new Thickness(4),
-            Background = Brushes.Transparent
+            Background = Brushes.Transparent,
+            // Garantit un contraste correct en mode Jour (texte sombre sur fond clair)
+            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(isDark ? "#F8FAFC" : "#0F172A"))
         };
 
         var lines = rawLogs.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -153,60 +173,66 @@ public partial class SettingsView : UserControl
 
     private static void FormatLogLine(Paragraph p, string line, bool isLast)
     {
+        bool isDark = ThemeService.IsDark;
+
         var match = Regex.Match(line, @"^(\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\])\s+(\[[A-Z]+\])\s*(.*)$");
         if (match.Success)
         {
             // Horodatage [YYYY-MM-DD HH:mm:ss]
+            string timeHex = isLast
+                ? (isDark ? "#FACC15" : "#B45309")
+                : (isDark ? "#94A3B8" : "#475569");
+
             var timeRun = new Run(match.Groups[1].Value + " ")
             {
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(isLast ? "#FACC15" : "#94A3B8")),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(timeHex)),
                 FontWeight = isLast ? FontWeights.Bold : FontWeights.Normal
             };
             p.Inlines.Add(timeRun);
 
             // Niveau [INFO], [WARNING], [ERROR], [DEBUG]
             string level = match.Groups[2].Value.ToUpperInvariant();
-            Color levelColor = isLast 
-                ? (Color)ColorConverter.ConvertFromString("#FACC15")
+            string levelHex = isLast
+                ? (isDark ? "#FACC15" : "#B45309")
                 : level switch
                 {
-                    "[ERROR]" => (Color)ColorConverter.ConvertFromString("#EF4444"),
-                    "[WARNING]" => (Color)ColorConverter.ConvertFromString("#F59E0B"),
-                    "[DEBUG]" => (Color)ColorConverter.ConvertFromString("#94A3B8"),
-                    _ => (Color)ColorConverter.ConvertFromString("#38BDF8")
+                    "[ERROR]" => (isDark ? "#EF4444" : "#B91C1C"),
+                    "[WARNING]" => (isDark ? "#F59E0B" : "#B45309"),
+                    "[DEBUG]" => (isDark ? "#94A3B8" : "#475569"),
+                    _ => (isDark ? "#38BDF8" : "#0369A1")
                 };
 
             var levelRun = new Run(match.Groups[2].Value + " ")
             {
-                Foreground = new SolidColorBrush(levelColor),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(levelHex)),
                 FontWeight = FontWeights.Bold
             };
             p.Inlines.Add(levelRun);
 
-            // Message : Le dernier est jaune (#FACC15), les précédents deviennent blancs (#FFFFFF)
+            // Message : Le dernier est mis en évidence, les précédents utilisent la couleur du texte principal
             string rawMsg = match.Groups[3].Value;
             string msg = LocalizationService.Instance.TranslateLogLine(rawMsg);
-            SolidColorBrush msgBrush = isLast
-                ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FACC15"))
-                : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+            string msgHex = isLast
+                ? (isDark ? "#FACC15" : "#B45309")
+                : (isDark ? "#F8FAFC" : "#0F172A");
 
             var msgRun = new Run(msg)
             {
-                Foreground = msgBrush,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(msgHex)),
                 FontWeight = isLast ? FontWeights.Bold : FontWeights.Normal
             };
             p.Inlines.Add(msgRun);
         }
         else
         {
-            Color fallbackColor = isLast 
-                ? (Color)ColorConverter.ConvertFromString("#FACC15")
-                : (Color)ColorConverter.ConvertFromString("#FFFFFF");
+            string fallbackHex = isLast
+                ? (isDark ? "#FACC15" : "#B45309")
+                : (isDark ? "#F8FAFC" : "#0F172A");
 
             string translatedLine = LocalizationService.Instance.TranslateLogLine(line);
             var rawRun = new Run(translatedLine)
             {
-                Foreground = new SolidColorBrush(fallbackColor),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(fallbackHex)),
                 FontWeight = isLast ? FontWeights.Bold : FontWeights.Normal
             };
             p.Inlines.Add(rawRun);

@@ -225,6 +225,14 @@ public partial class SettingsViewModel : ObservableObject
     private string _liveRecordMode = "Enregistrer les directs depuis le clic";
 
     [ObservableProperty]
+    private string _liveDiskSpaceMargin = "500 Mo";
+
+    [ObservableProperty]
+    private string _liveDiskSpaceValidationMessage = string.Empty;
+
+    public bool HasLiveDiskSpaceError => !string.IsNullOrEmpty(LiveDiskSpaceValidationMessage);
+
+    [ObservableProperty]
     private string _liveMaxDuration = "Illimité";
 
     [ObservableProperty]
@@ -477,6 +485,7 @@ public partial class SettingsViewModel : ObservableObject
         string PlaylistNamingTemplate,
         string LiveEngine,
         string LiveRecordMode,
+        string LiveDiskSpaceMargin,
         bool IsLiveDurationUnlimited,
         string LiveMaxDurationCustom,
         string LiveInterruptionAction,
@@ -545,9 +554,15 @@ public partial class SettingsViewModel : ObservableObject
 
             SpeedLimit = s.SpeedLimit;
             PlaylistNamingTemplate = string.IsNullOrWhiteSpace(s.PlaylistNamingTemplate) ? "{index} - {title}" : s.PlaylistNamingTemplate;
+            if (!string.IsNullOrWhiteSpace(PlaylistNamingTemplate) && !AvailableNamingTemplates.Contains(PlaylistNamingTemplate))
+            {
+                AvailableNamingTemplates.Insert(0, PlaylistNamingTemplate);
+            }
             
             LiveEngine = s.LiveEngine;
             LiveRecordMode = s.LiveRecordMode;
+            LiveDiskSpaceMargin = string.IsNullOrWhiteSpace(s.LiveDiskSpaceMargin) ? "500 Mo" : s.LiveDiskSpaceMargin;
+            ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin);
             LiveMaxDuration = s.LiveMaxDuration;
             LiveInterruptionAction = s.LiveInterruptionAction;
 
@@ -622,6 +637,7 @@ public partial class SettingsViewModel : ObservableObject
             PlaylistNamingTemplate ?? "{index} - {title}",
             LiveEngine ?? string.Empty,
             LiveRecordMode ?? string.Empty,
+            LiveDiskSpaceMargin ?? "500 Mo",
             IsLiveDurationUnlimited,
             LiveMaxDurationCustom ?? string.Empty,
             LiveInterruptionAction ?? string.Empty,
@@ -692,6 +708,7 @@ public partial class SettingsViewModel : ObservableObject
         if (!string.Equals(PlaylistNamingTemplate ?? string.Empty, _initialSnapshot.PlaylistNamingTemplate, StringComparison.Ordinal)) count++;
         if (!string.Equals(LiveEngine ?? string.Empty, _initialSnapshot.LiveEngine, StringComparison.Ordinal)) count++;
         if (!string.Equals(LiveRecordMode ?? string.Empty, _initialSnapshot.LiveRecordMode, StringComparison.Ordinal)) count++;
+        if (!string.Equals(LiveDiskSpaceMargin ?? string.Empty, _initialSnapshot.LiveDiskSpaceMargin, StringComparison.Ordinal)) count++;
         if (IsLiveDurationUnlimited != _initialSnapshot.IsLiveDurationUnlimited) count++;
         if (!IsLiveDurationUnlimited && !string.Equals(LiveMaxDurationCustom ?? string.Empty, _initialSnapshot.LiveMaxDurationCustom, StringComparison.Ordinal)) count++;
         if (!string.Equals(LiveInterruptionAction ?? string.Empty, _initialSnapshot.LiveInterruptionAction, StringComparison.Ordinal)) count++;
@@ -813,9 +830,90 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    partial void OnLiveDiskSpaceMarginChanged(string value)
+    {
+        ValidateLiveDiskSpaceMargin(value);
+    }
+
+    public bool ValidateLiveDiskSpaceMargin(string text)
+    {
+        if (DiskSpaceHelper.TryParseDiskSpace(text, out _, out var error))
+        {
+            LiveDiskSpaceValidationMessage = string.Empty;
+            OnPropertyChanged(nameof(HasLiveDiskSpaceError));
+            return true;
+        }
+        else
+        {
+            LiveDiskSpaceValidationMessage = error;
+            OnPropertyChanged(nameof(HasLiveDiskSpaceError));
+            return false;
+        }
+    }
+
+    [RelayCommand]
+    private void IncrementDiskMargin()
+    {
+        if (DiskSpaceHelper.TryParseDiskSpace(LiveDiskSpaceMargin, out long bytes, out _))
+        {
+            long step = bytes < 1024L * 1024 * 1024 ? 100L * 1024 * 1024 : 500L * 1024 * 1024;
+            long next = bytes + step;
+            LiveDiskSpaceMargin = DiskSpaceHelper.FormatDiskSpace(next);
+        }
+        else
+        {
+            LiveDiskSpaceMargin = "500 Mo";
+        }
+    }
+
+    [RelayCommand]
+    private void DecrementDiskMargin()
+    {
+        if (DiskSpaceHelper.TryParseDiskSpace(LiveDiskSpaceMargin, out long bytes, out _))
+        {
+            long step = bytes <= 1024L * 1024 * 1024 ? 100L * 1024 * 1024 : 500L * 1024 * 1024;
+            long next = Math.Max(DiskSpaceHelper.MinimumAllowedBytes, bytes - step);
+            LiveDiskSpaceMargin = DiskSpaceHelper.FormatDiskSpace(next);
+        }
+        else
+        {
+            LiveDiskSpaceMargin = "500 Mo";
+        }
+    }
+
+    private CancellationTokenSource? _successBubbleCts;
+
+    private void ShowSuccessBubble()
+    {
+        _successBubbleCts?.Cancel();
+        _successBubbleCts = new CancellationTokenSource();
+        var token = _successBubbleCts.Token;
+
+        SuccessBubbleTitle = LocalizationService.Instance["SettingsSavedTitle"];
+        SuccessBubbleSubtitle = LocalizationService.Instance["SettingsSavedSubtitle"];
+        IsSuccessBubbleVisible = true;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(3000, token);
+                if (!token.IsCancellationRequested)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        IsSuccessBubbleVisible = false;
+                    });
+                }
+            }
+            catch (TaskCanceledException) { }
+        });
+    }
+
     [RelayCommand]
     private void DismissSuccessBubble()
     {
+        _successBubbleCts?.Cancel();
         IsSuccessBubbleVisible = false;
     }
 
@@ -875,7 +973,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (IsLiveDurationUnlimited) return;
         int current = GetCurrentLiveDurationMinutes();
-        int next = Math.Clamp(current + 1, 1, 300);
+        int next = Math.Max(1, current + 1);
         LiveMaxDurationCustom = $"{next} min";
     }
 
@@ -884,7 +982,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (IsLiveDurationUnlimited) return;
         int current = GetCurrentLiveDurationMinutes();
-        int next = Math.Clamp(current - 1, 1, 300);
+        int next = Math.Max(1, current - 1);
         LiveMaxDurationCustom = $"{next} min";
     }
 
@@ -921,6 +1019,14 @@ public partial class SettingsViewModel : ObservableObject
         
         s.LiveEngine = LiveEngine;
         s.LiveRecordMode = LiveRecordMode;
+        if (ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin))
+        {
+            s.LiveDiskSpaceMargin = LiveDiskSpaceMargin;
+        }
+        else
+        {
+            s.LiveDiskSpaceMargin = "500 Mo";
+        }
         
         if (IsLiveDurationUnlimited)
         {
@@ -978,15 +1084,14 @@ public partial class SettingsViewModel : ObservableObject
         // Met à jour le snapshot : la barre transversale disparaît immédiatement après le clic sur Enregistrer
         TakeSnapshot();
 
-        // Afficher la bulle de confirmation et RESTER dans la page des paramètres
-        SuccessBubbleTitle = LocalizationService.Instance["SettingsSavedTitle"];
-        SuccessBubbleSubtitle = LocalizationService.Instance["SettingsSavedSubtitle"];
-        IsSuccessBubbleVisible = true;
+        // Afficher la bulle de confirmation (durée 3s max si non fermée manuellement) et RESTER dans la page des paramètres
+        ShowSuccessBubble();
     }
 
     [RelayCommand]
     private void Cancel()
     {
+        _successBubbleCts?.Cancel();
         IsSuccessBubbleVisible = false;
         LoadSettings();
         RequestClose?.Invoke();

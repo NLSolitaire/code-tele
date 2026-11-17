@@ -42,8 +42,8 @@ public class NativeMethods
 
 public class SingleInstanceManager : IDisposable
 {
-    private const string MutexName = "Global\\UberDownloader_Net10_SingleInstance_Mutex";
-    private const string PipeName = "UberDownloader_Net10_IPC_Pipe";
+    private const string MutexName = "Global\\TheWhateverDownloader_Net10_SingleInstance_Mutex";
+    private const string PipeName = "TheWhateverDownloader_Net10_IPC_Pipe";
 
     private Mutex? _mutex;
     private bool _isFirstInstance;
