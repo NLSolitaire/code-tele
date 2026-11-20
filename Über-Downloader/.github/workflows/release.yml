@@ -36,12 +36,13 @@ jobs:
       - name: Execute automated distribution pipeline
         shell: powershell
         run: |
-          # Résolution du répertoire du projet
-          $targetDir = $PWD
-          if (Test-Path "Über-Downloader\build-distribution.ps1") {
-              $targetDir = Join-Path $PWD "Über-Downloader"
-              Set-Location $targetDir
+          # Résolution automatique du script build-distribution.ps1 (résilient aux encodages et chemins)
+          $script = Get-ChildItem -Path $PWD -Filter "build-distribution.ps1" -Recurse | Select-Object -First 1
+          if ($null -eq $script) {
+              throw "Script build-distribution.ps1 introuvable dans le dépôt !"
           }
+          Write-Host "Script trouvé : $($script.FullName)" -ForegroundColor Cyan
+          Set-Location $script.Directory.FullName
 
           # Résolution de la version
           $inputVersion = "${{ github.event.inputs.version }}"
@@ -56,21 +57,22 @@ jobs:
 
           Write-Host "Lancement de la distribution avec la version : '$buildVersion'" -ForegroundColor Cyan
           if (-not [string]::IsNullOrWhiteSpace($buildVersion)) {
-              .\build-distribution.ps1 -Version $buildVersion
+              & $script.FullName -Version $buildVersion
           } else {
-              .\build-distribution.ps1
+              & $script.FullName
           }
 
       - name: Locate Artifacts Directory
         id: locate_dist
         shell: powershell
         run: |
-          if (Test-Path "dist\SHA256SUMS.txt") {
-              echo "DIST_PATH=dist" >> $env:GITHUB_ENV
-          } elseif (Test-Path "Über-Downloader\dist\SHA256SUMS.txt") {
-              echo "DIST_PATH=Über-Downloader/dist" >> $env:GITHUB_ENV
+          $shaFile = Get-ChildItem -Path $PWD -Filter "SHA256SUMS.txt" -Recurse | Select-Object -First 1
+          if ($shaFile) {
+              $distPath = $shaFile.Directory.FullName
+              Write-Host "Dossier dist trouvé : $distPath" -ForegroundColor Green
+              "DIST_PATH=$distPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           } else {
-              throw "Dossier dist introuvable après l'exécution du build."
+              throw "Fichier SHA256SUMS.txt introuvable après l'exécution du build."
           }
 
       - name: Create GitHub Release
@@ -82,7 +84,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            ${{ env.DIST_PATH }}/TheWhateverDownloader-*-win-x64-portable.zip
-            ${{ env.DIST_PATH }}/TheWhateverDownloader-*-Standalone-win-x64.exe
-            ${{ env.DIST_PATH }}/installer/TheWhateverDownloader-*-Setup-x64.exe
+            ${{ env.DIST_PATH }}/*-portable.zip
+            ${{ env.DIST_PATH }}/*-Standalone-*.exe
+            ${{ env.DIST_PATH }}/**/TheWhateverDownloader-*-Setup-*.exe
             ${{ env.DIST_PATH }}/SHA256SUMS.txt

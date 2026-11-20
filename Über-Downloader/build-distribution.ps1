@@ -127,7 +127,8 @@ Copy-Item $publishedExe (Join-Path $portableStagingDir "TheWhateverDownloader.ex
 Copy-Item (Join-Path $rootDir "LICENSE") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "THIRD-PARTY-NOTICES.txt") $portableStagingDir -Force
 Copy-Item (Join-Path $rootDir "README.md") $portableStagingDir -Force
-Copy-Item (Join-Path $rootDir "Uber.ico") $portableStagingDir -Force
+if (Test-Path (Join-Path $rootDir "Uber.ico")) { Copy-Item (Join-Path $rootDir "Uber.ico") $portableStagingDir -Force }
+if (Test-Path (Join-Path $rootDir "TWD.ico")) { Copy-Item (Join-Path $rootDir "TWD.ico") $portableStagingDir -Force }
 Copy-Item $binDir $portableStagingDir -Recurse -Force
 
 $scriptsSrc = Join-Path $win64Dir "Scripts"
