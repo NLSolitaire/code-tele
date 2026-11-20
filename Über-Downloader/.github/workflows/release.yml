@@ -36,13 +36,22 @@ jobs:
       - name: Execute automated distribution pipeline
         shell: powershell
         run: |
-          # Résolution automatique du script build-distribution.ps1 (résilient aux encodages et chemins)
-          $script = Get-ChildItem -Path $PWD -Filter "build-distribution.ps1" -Recurse | Select-Object -First 1
-          if ($null -eq $script) {
+          # Résolution du script build-distribution.ps1 via wildcard (insensible aux encodages)
+          $scriptPath = (Resolve-Path "*Downloader\build-distribution.ps1" -ErrorAction SilentlyContinue).Path
+          if (-not $scriptPath) {
+              $scriptPath = (Resolve-Path "build-distribution.ps1" -ErrorAction SilentlyContinue).Path
+          }
+          if (-not $scriptPath) {
+              $found = Get-ChildItem -Path $PWD -Filter "build-distribution.ps1" -Recurse | Select-Object -First 1
+              if ($found) { $scriptPath = $found.FullName }
+          }
+          if (-not $scriptPath) {
               throw "Script build-distribution.ps1 introuvable dans le dépôt !"
           }
-          Write-Host "Script trouvé : $($script.FullName)" -ForegroundColor Cyan
-          Set-Location $script.Directory.FullName
+          Write-Host "Script trouvé : $scriptPath" -ForegroundColor Cyan
+          $scriptDir = Split-Path -Parent $scriptPath
+          Set-Location $scriptDir
+          Write-Host "Répertoire de travail : $scriptDir" -ForegroundColor Cyan
 
           # Résolution de la version
           $inputVersion = "${{ github.event.inputs.version }}"
@@ -57,23 +66,25 @@ jobs:
 
           Write-Host "Lancement de la distribution avec la version : '$buildVersion'" -ForegroundColor Cyan
           if (-not [string]::IsNullOrWhiteSpace($buildVersion)) {
-              & $script.FullName -Version $buildVersion
+              & $scriptPath -Version $buildVersion
           } else {
-              & $script.FullName
+              & $scriptPath
           }
 
       - name: Locate Artifacts Directory
         id: locate_dist
         shell: powershell
         run: |
-          $shaFile = Get-ChildItem -Path $PWD -Filter "SHA256SUMS.txt" -Recurse | Select-Object -First 1
-          if ($shaFile) {
-              $distPath = $shaFile.Directory.FullName
-              Write-Host "Dossier dist trouvé : $distPath" -ForegroundColor Green
-              "DIST_PATH=$distPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          } else {
-              throw "Fichier SHA256SUMS.txt introuvable après l'exécution du build."
+          $distPath = (Resolve-Path "*Downloader\dist" -ErrorAction SilentlyContinue).Path
+          if (-not $distPath -or -not (Test-Path (Join-Path $distPath "SHA256SUMS.txt"))) {
+              $sha = Get-ChildItem -Path $PWD -Filter "SHA256SUMS.txt" -Recurse | Select-Object -First 1
+              if ($sha) { $distPath = $sha.Directory.FullName }
           }
+          if (-not $distPath) {
+              throw "Dossier dist introuvable après l'exécution du build."
+          }
+          Write-Host "Dossier dist trouvé : $distPath" -ForegroundColor Green
+          "DIST_PATH=$distPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
