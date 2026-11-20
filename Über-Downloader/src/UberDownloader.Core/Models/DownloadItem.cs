@@ -41,6 +41,7 @@ public class DownloadItem
     public string EtaStr { get; set; } = string.Empty;
     public string SizeStr { get; set; } = "--";
     public string OutputPath { get; set; } = string.Empty;
+    public string TargetFolder { get; set; } = string.Empty;
     public string ThumbnailPath { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
     public bool IsLive { get; set; } = false;
@@ -59,10 +60,13 @@ public class DownloadItem
     public string VideoCodec { get; set; } = string.Empty;
     public string VideoDynamicRange { get; set; } = string.Empty;
     public string ContainerFormat { get; set; } = string.Empty;
+    // Partagée par les services de sortie audio/vidéo et l'alerte flottante de MainViewModel.
+    public List<string> OutputFallbacks { get; set; } = new();
     public string SpeedLimit { get; set; } = string.Empty;
     public string AudioCodec { get; set; } = string.Empty;
     public string AudioBitrate { get; set; } = string.Empty;
     public string AudioSampleRate { get; set; } = string.Empty;
+    public string AudioBitDepth { get; set; } = string.Empty;
     public string AudioChannels { get; set; } = string.Empty;
 
     // Surcharge de gabarit de nommage de playlist

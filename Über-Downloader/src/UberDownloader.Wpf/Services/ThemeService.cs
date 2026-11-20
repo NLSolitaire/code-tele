@@ -41,6 +41,8 @@ public static class ThemeService
 
     public static void ApplyTheme(string themeChoice)
     {
+        // App.xaml.cs l'appelle au démarrage ; SettingsViewModel l'appelle aussi pour l'aperçu du choix
+        // et pour restaurer le thème enregistré lorsque l'utilisateur annule les changements.
         _currentMode = themeChoice;
         bool isDark = true;
 
@@ -84,6 +86,8 @@ public static class ThemeService
 
     private static void ApplyColors(bool isDark)
     {
+        // Ces clés correspondent à la palette initiale d'App.xaml ; les vues qui utilisent DynamicResource
+        // (notamment SettingsView et MainWindow) se mettent à jour sans recréer leurs contrôles.
         var dict = Application.Current?.Resources;
         if (dict == null) return;
 

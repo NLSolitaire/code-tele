@@ -80,6 +80,8 @@ public partial class App : Application
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        // Le conteneur partage les services de données, réglages et téléchargement avec les ViewModels ;
+        // MainWindow reçoit ainsi MainViewModel, qui reçoit lui-même SettingsViewModel et les services requis.
         services.AddSingleton<DatabaseService>();
         services.AddSingleton<SettingsService>();
         services.AddSingleton<MediaIntegrityService>();
@@ -116,6 +118,7 @@ public partial class App : Application
         }
 
         var settingsService = _serviceProvider.GetRequiredService<SettingsService>();
+        // Le thème met à jour les ressources DynamicResource déclarées dans App.xaml avant que les vues ne soient créées.
         UberDownloader.Wpf.Services.ThemeService.Initialize(settingsService.Settings.Theme);
 
         _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
@@ -169,6 +172,7 @@ public partial class App : Application
 
         _mainWindow.Loaded += (s, ev) =>
         {
+            // Le raccourci global est enregistré seulement après le chargement de la fenêtre WPF.
             SetupGlobalHotkey();
         };
 

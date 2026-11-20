@@ -11,8 +11,6 @@
             <RowDefinition Height="Auto"/>
             <!-- Bulle de notification succès -->
             <RowDefinition Height="Auto"/>
-            <!-- Barre transversale de modifications en attente avant enregistrement -->
-            <RowDefinition Height="Auto"/>
             <!-- Contenu TabControl -->
             <RowDefinition Height="*"/>
             <!-- Barre de statut / validation -->
@@ -57,40 +55,8 @@
             </Grid>
         </Border>
 
-        <!-- 2b. Barre transversale comptant le nombre de modifications avant enregistrement -->
-        <Border Grid.Row="2"
-                Visibility="{Binding HasPendingChanges, Converter={StaticResource BoolToVis}}"
-                Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1.5"
-                CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3" Color="#000000"/>
-            </Border.Effect>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="✏️" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding PendingChangesBannerText}" Foreground="#BFDBFE" FontWeight="Bold" FontSize="13"/>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="{Binding Loc[Save]}" Command="{Binding SaveCommand}" Cursor="Hand"
-                            Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0"
-                            Padding="16,6">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="6"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-
         <!-- 3. Onglets Réglages & Diagnostic -->
-        <TabControl Grid.Row="3" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" SelectionChanged="OnTabControlSelectionChanged">
+        <TabControl x:Name="SettingsTabs" Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" SelectionChanged="OnTabControlSelectionChanged">
             <TabControl.Resources>
                 <Style TargetType="TabItem">
                     <Setter Property="Cursor" Value="Hand"/>
@@ -140,7 +106,7 @@
                         <ComboBox ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding Language, Mode=TwoWay}" Height="34" Width="140" HorizontalAlignment="Left" Margin="0,0,0,14"/>
 
                         <!-- Téléchargements simultanés avec Flèches Up/Down (>= 1) et option Illimité -->
-                        <TextBlock Text="{Binding Loc[MaxConcurrent]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[MaxConcurrent]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Grid Width="140" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions>
@@ -165,7 +131,7 @@
                         </StackPanel>
 
                         <!-- Nombre max de tentatives automatiques (erreurs réseau / temporaires) et option Illimité -->
-                        <TextBlock Text="{Binding Loc[MaxRetriesLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[MaxRetriesLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Grid Width="140" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions>
@@ -190,11 +156,11 @@
                         </StackPanel>
 
                         <!-- Menu déroulant Limite de débit -->
-                        <TextBlock Text="{Binding Loc[SpeedLimit]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[SpeedLimit]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <ComboBox ItemsSource="{Binding AvailableSpeedLimits}" SelectedItem="{Binding SpeedLimit, Mode=TwoWay}" Height="34" Width="180" HorizontalAlignment="Left" Margin="0,0,0,14"/>
 
                         <!-- Modèle de nommage des playlists -->
-                        <TextBlock Text="{Binding Loc[PlaylistNamingTemplate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[PlaylistNamingTemplate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Loc[PlaylistNamingTemplateDesc]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,6"/>
                         <ComboBox ItemsSource="{Binding AvailableNamingTemplates}" SelectedItem="{Binding PlaylistNamingTemplate, Mode=TwoWay}"
                                   Height="34" Width="280" HorizontalAlignment="Left" Margin="0,0,0,14">
@@ -207,7 +173,7 @@
                         </ComboBox>
 
                         <!-- Configuration interactive du Raccourci Clavier Global -->
-                        <TextBlock Text="{Binding Loc[GlobalHotkeyLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[GlobalHotkeyLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Loc[GlobalHotkeyHelp]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,8"/>
 
                         <!-- Mode Normal (Hors capture) -->
@@ -339,7 +305,7 @@
                                         </Button.Resources>
                                     </Button>
                                     <Button Content="{Binding Loc[CancelHotkeyButton]}" Command="{Binding CancelHotkeySetupCommand}"
-                                            Cursor="Hand" Height="32" Padding="12,0" Background="Transparent" Foreground="#94A3B8" BorderThickness="1" BorderBrush="#475569">
+                                            Cursor="Hand" Height="32" Padding="12,0" Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrushColor}">
                                         <Button.Resources>
                                             <Style TargetType="Border">
                                                 <Setter Property="CornerRadius" Value="6"/>
@@ -352,15 +318,15 @@
 
 
 
-                        <!-- Options à cocher -->
-                        <CheckBox Content="{Binding Loc[AutoResumeOnStartup]}" IsChecked="{Binding AutoResumeOnStartup, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
-                        <CheckBox Content="{Binding Loc[AutoClipboardWatch]}" IsChecked="{Binding ClipboardWatch, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
-                        <CheckBox Content="{Binding Loc[EnableWindowsNotifications]}" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
-                        <CheckBox Content="{Binding Loc[AutoEmbedMetadata]}" IsChecked="{Binding EmbedThumbnail, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
-                        <CheckBox Content="{Binding Loc[AutoSniffStreams]}" IsChecked="{Binding AutoSniff, Mode=TwoWay}" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                        <!-- Ces cases modifient les propriétés de SettingsViewModel ; Save les reporte dans AppSettings via SettingsService. -->
+                        <CheckBox Content="{Binding Loc[AutoResumeOnStartup]}" IsChecked="{Binding AutoResumeOnStartup, Mode=TwoWay}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoClipboardWatch]}" IsChecked="{Binding ClipboardWatch, Mode=TwoWay}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[EnableWindowsNotifications]}" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoEmbedMetadata]}" IsChecked="{Binding EmbedThumbnail, Mode=TwoWay}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                        <CheckBox Content="{Binding Loc[AutoSniffStreams]}" IsChecked="{Binding AutoSniff, Mode=TwoWay}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
 
                         <!-- Navigateur pour l'extraction de flux -->
-                        <TextBlock Text="{Binding Loc[ExtractionBrowserLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[ExtractionBrowserLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <ComboBox ItemsSource="{Binding AvailableExtractionBrowsers}" SelectedItem="{Binding ExtractionBrowser, Mode=TwoWay}" Height="34" Width="220" HorizontalAlignment="Left" Margin="0,0,0,14"/>
                     </StackPanel>
                 </ScrollViewer>
@@ -371,12 +337,12 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
                     <StackPanel>
                         <!-- Moteur live : Streamlink (reco) ou yt-dlp -->
-                        <TextBlock Text="{Binding Loc[LiveEngine]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[LiveEngine]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <ComboBox ItemsSource="{Binding AvailableLiveEngines}" SelectedItem="{Binding LiveEngine, Mode=TwoWay}" Height="34" Width="240" HorizontalAlignment="Left" Margin="0,0,0,14"/>
 
                         <!-- Choix binaire : depuis le début / depuis le clic avec icône 'i' infobulle Twitch -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <TextBlock Text="{Binding Loc[LiveRecordMode]}" Foreground="#94A3B8" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Loc[LiveRecordMode]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <TextBlock Text=" ℹ️" Foreground="#38BDF8" FontSize="14" Cursor="Help"
                                        ToolTip="{Binding Loc[TwitchTooltip]}"
                                        VerticalAlignment="Center" Margin="6,0,0,0"/>
@@ -384,29 +350,26 @@
                         <ComboBox ItemsSource="{Binding AvailableLiveRecordModes}" SelectedItem="{Binding LiveRecordMode, Mode=TwoWay}" Height="34" Width="320" HorizontalAlignment="Left" Margin="0,0,0,14"/>
 
                         <!-- Marge d'espace disque minimale pour l'enregistrement des directs -->
-                        <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginDesc]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,6"/>
-                        <Grid Width="220" HorizontalAlignment="Left" Margin="0,0,0,4">
+                        <Grid Width="280" HorizontalAlignment="Left" Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Text="{Binding LiveDiskSpaceMargin, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                            <TextBox Text="{Binding LiveDiskSpaceMarginValue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     PreviewTextInput="OnDiskSpaceMarginPreviewTextInput" DataObject.Pasting="OnDiskSpaceMarginPasting"
                                      Height="34" Padding="8,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Background="{DynamicResource InputBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource BorderBrushColor}" FontWeight="SemiBold"/>
-                            <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                <Button Content="▲" Command="{Binding IncrementDiskMarginCommand}"
-                                        Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9"/>
-                                <Button Content="▼" Command="{Binding DecrementDiskMarginCommand}"
-                                        Cursor="Hand" Height="16" Width="26" Padding="0" Background="#334155" Foreground="White" BorderThickness="0" FontSize="9" Margin="0,2,0,0"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableDiskSpaceUnits}" SelectedItem="{Binding LiveDiskSpaceMarginUnit, Mode=TwoWay}"
+                                      Height="34" Margin="6,0,0,0"/>
                         </Grid>
                         <TextBlock Text="{Binding LiveDiskSpaceValidationMessage}" Foreground="#EF4444" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6"
                                    Visibility="{Binding HasLiveDiskSpaceError, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="{Binding Loc[LiveDiskSpaceMarginHint]}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,14"/>
 
                         <!-- 6.6 Action coupure -->
-                        <TextBlock Text="{Binding Loc[LiveInterruptionActionLabel]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding Loc[LiveInterruptionActionLabel]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                         <ComboBox ItemsSource="{Binding AvailableLiveInterruptionActions}" SelectedItem="{Binding LiveInterruptionAction, Mode=TwoWay}"
                                   Height="34" Width="380" HorizontalAlignment="Left" Margin="0,0,0,14"/>
                     </StackPanel>
@@ -431,23 +394,23 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="12" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
                             <StackPanel>
                                 <!-- Résolution exacte -->
-                                <TextBlock Text="{Binding Loc[ExactResolution]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[ExactResolution]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableVideoResolutions}" SelectedItem="{Binding AdvancedVideoResolution, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- FPS -->
-                                <TextBlock Text="{Binding Loc[FrameRate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[FrameRate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableVideoFpsList}" SelectedItem="{Binding AdvancedVideoFps, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Codec vidéo -->
-                                <TextBlock Text="{Binding Loc[VideoCodec]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[VideoCodec]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableVideoCodecs}" SelectedItem="{Binding AdvancedVideoCodec, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Plage dynamique -->
-                                <TextBlock Text="{Binding Loc[DynamicRange]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[DynamicRange]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableDynamicRanges}" SelectedItem="{Binding AdvancedVideoDynamicRange, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Débit vidéo -->
-                                <TextBlock Text="{Binding Loc[VideoBitrate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[VideoBitrate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableVideoBitrates}" SelectedItem="{Binding AdvancedVideoBitrate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
                             </StackPanel>
                         </ScrollViewer>
@@ -458,24 +421,29 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="12" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
                             <StackPanel>
                                 <!-- Codec audio -->
-                                <TextBlock Text="{Binding Loc[AudioCodec]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[AudioCodec]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAudioCodecs}" SelectedItem="{Binding AdvancedAudioCodec, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Débit binaire -->
-                                <TextBlock Text="{Binding Loc[AudioBitrate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[AudioBitrate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAudioBitrates}" SelectedItem="{Binding AdvancedAudioBitrate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Fréquence d'échantillonnage -->
-                                <TextBlock Text="{Binding Loc[SampleRate]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[SampleRate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAudioSampleRates}" SelectedItem="{Binding AdvancedAudioSampleRate, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Profondeur de bits -->
-                                <TextBlock Text="{Binding Loc[BitDepth]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[BitDepth]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAudioBitDepths}" SelectedItem="{Binding AdvancedAudioBitDepth, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
 
                                 <!-- Canaux audio -->
-                                <TextBlock Text="{Binding Loc[Channels]}" Foreground="#94A3B8" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding Loc[Channels]}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAudioChannels}" SelectedItem="{Binding AdvancedAudioChannels, Mode=TwoWay}" Height="32" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="{Binding Loc[AudioSettingsHelp]}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
@@ -592,6 +560,31 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Carte Dépôt GitHub -->
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel HorizontalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Text="🌐" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Loc[AboutRepositoryTitle]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Loc[AboutRepositoryText]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" TextAlignment="Center"/>
+                                <TextBlock Margin="0,0,0,12" TextAlignment="Center">
+                                    <Hyperlink Command="{Binding OpenProjectRepositoryCommand}" Foreground="#38BDF8" TextDecorations="Underline" Cursor="Hand">
+                                        <Run Text="https://github.com/NLSolitaire/code-tele"/>
+                                    </Hyperlink>
+                                </TextBlock>
+                                <Button Content="{Binding Loc[AboutRepositoryButton]}" Command="{Binding OpenProjectRepositoryCommand}" Cursor="Hand"
+                                        Background="{DynamicResource CardBackgroundBrush}" Foreground="#38BDF8" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1"
+                                        Padding="14,7" HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Carte Avis Juridique & Responsabilité -->
                         <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
                             <StackPanel>
@@ -617,9 +610,63 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
+            <!-- Les questions/réponses passent par Loc, comme les autres onglets ; leurs traductions vivent dans LocalizationService. -->
+            <TabItem Header="{Binding Loc[TabFAQ]}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14" PreviewMouseWheel="OnSettingsScrollViewerPreviewMouseWheel">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding Loc[FaqIntro]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[FaqResumeQuestion]}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[FaqResumeAnswer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[FaqClipboardQuestion]}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[FaqClipboardAnswer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[FaqPlaywrightQuestion]}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[FaqPlaywrightAnswer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[FaqBrowserQuestion]}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[FaqBrowserAnswer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource SubCardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[FaqLogsQuestion]}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding Loc[FaqLogsAnswer]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
 
         <!-- 4. Message de statut -->
-        <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Bold" Margin="0,8,0,0" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Bold" Margin="0,8,0,0" VerticalAlignment="Center"/>
+        <Border Grid.Row="0" Grid.RowSpan="4" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,8,16" Padding="14,9" CornerRadius="10"
+                Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1"
+                Visibility="{Binding IsPendingChangesNotificationVisible, Converter={StaticResource BoolToVis}}"
+                IsHitTestVisible="False">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.3" Color="#000000"/>
+            </Border.Effect>
+            <TextBlock Text="{Binding PendingChangesNotificationText}" Foreground="#BFDBFE" FontWeight="Bold" FontSize="12"/>
+        </Border>
     </Grid>
 </UserControl>

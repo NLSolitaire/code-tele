@@ -74,7 +74,13 @@ public class DownloadService
     public void CleanupIntermediateFilesOnly(DownloadItem item)
     {
         var settings = _settingsService.Settings;
-        string folder = !string.IsNullOrWhiteSpace(settings.DownloadFolder) ? settings.DownloadFolder : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string folder = !string.IsNullOrWhiteSpace(item.PlaylistFolder)
+            ? item.PlaylistFolder
+            : !string.IsNullOrWhiteSpace(item.TargetFolder)
+                ? item.TargetFolder
+                : !string.IsNullOrWhiteSpace(settings.DownloadFolder)
+                    ? settings.DownloadFolder
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         string cleanTitle = !string.IsNullOrWhiteSpace(item.CustomTitle) ? item.CustomTitle : (!string.IsNullOrWhiteSpace(item.Title) ? item.Title : $"Video_{item.Id}");
         cleanTitle = SanitizeFileName(cleanTitle);
 
@@ -110,7 +116,13 @@ public class DownloadService
         CancelDownload(item);
 
         var settings = _settingsService.Settings;
-        string folder = !string.IsNullOrWhiteSpace(settings.DownloadFolder) ? settings.DownloadFolder : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string folder = !string.IsNullOrWhiteSpace(item.PlaylistFolder)
+            ? item.PlaylistFolder
+            : !string.IsNullOrWhiteSpace(item.TargetFolder)
+                ? item.TargetFolder
+                : !string.IsNullOrWhiteSpace(settings.DownloadFolder)
+                    ? settings.DownloadFolder
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         string cleanTitle = !string.IsNullOrWhiteSpace(item.CustomTitle) ? item.CustomTitle : (!string.IsNullOrWhiteSpace(item.Title) ? item.Title : $"Video_{item.Id}");
         cleanTitle = SanitizeFileName(cleanTitle);
 
@@ -205,7 +217,11 @@ public class DownloadService
         string ffmpegDir = Path.GetDirectoryName(ffmpegExe) ?? string.Empty;
 
         var settings = _settingsService.Settings;
-        string folder = !string.IsNullOrWhiteSpace(settings.DownloadFolder) ? settings.DownloadFolder : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string folder = !string.IsNullOrWhiteSpace(item.TargetFolder)
+            ? item.TargetFolder
+            : !string.IsNullOrWhiteSpace(settings.DownloadFolder)
+                ? settings.DownloadFolder
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         Directory.CreateDirectory(folder);
 
         bool hasSubtitles = !string.IsNullOrWhiteSpace(item.SubtitleTrack) && 
@@ -611,6 +627,33 @@ public class DownloadService
 
         if (proc.ExitCode == 0 && mediaFileExists)
         {
+            // Les sorties audio et vidéo sont transformées après yt-dlp, avant le contrôle d'intégrité.
+            // Les services écrivent les replis sur l'item ; DownloadScheduler les transmet à MainViewModel.
+            FixAudioTrackMetadata(resolvedFile, ffmpegExe, item.AudioLanguage);
+            if (IsAudioDownload(item))
+            {
+                var outputService = new AudioOutputService();
+                resolvedFile = await outputService.ApplyRequestedOutputAsync(item, resolvedFile, ffmpegExe, settings, cancellationToken);
+            }
+            else
+            {
+                var outputService = new VideoOutputService();
+                resolvedFile = await outputService.ApplyRequestedOutputAsync(item, resolvedFile, ffmpegExe, cancellationToken);
+            }
+
+            mediaFileExists = File.Exists(resolvedFile) &&
+                              new FileInfo(resolvedFile).Length > 1024 &&
+                              IsMediaFile(resolvedFile);
+            if (!mediaFileExists)
+            {
+                item.Status = JobStatus.Error;
+                item.StatusDetail = LocalizationService.Instance["IntegrityCheckFailed"];
+                item.ErrorMessage = $"Le fichier de sortie est introuvable ou invalide : {resolvedFile}";
+                item.LastError = item.ErrorMessage;
+                onProgress(item);
+                return;
+            }
+
             // Vérification de l'intégrité réelle avec ffprobe (Étape 3)
             var integrityService = new MediaIntegrityService();
             var verified = await integrityService.VerifyMediaFileAsync(resolvedFile, cancellationToken);
@@ -630,9 +673,6 @@ public class DownloadService
             item.Progress = 100.0;
             item.FinishedAt = DateTime.Now;
             item.OutputPath = resolvedFile;
-
-            // Injection des noms et langues réelles des pistes audio dans le conteneur MKV/MP4
-            FixAudioTrackMetadata(resolvedFile, ffmpegExe, item.AudioLanguage);
 
             // Synchronisation automatique d'un fichier .srt avec le nom exact pour le Lecteur Windows si sous-titres requis
             if (hasSubtitles)
@@ -667,6 +707,8 @@ public class DownloadService
             bool isDirectStream = !string.IsNullOrWhiteSpace(item.TargetUrl) && !string.Equals(item.TargetUrl, item.Url, StringComparison.OrdinalIgnoreCase);
             bool tokenExpired = isDirectStream && (err.Contains("403") || err.Contains("Forbidden") || err.Contains("410") || err.Contains("Gone") || err.Contains("404") || err.Contains("Not Found"));
 
+            // AutoSniff est le réglage de SettingsViewModel persisté dans AppSettings ;
+            // ce secours ne lance StreamSnifferService que pour les erreurs de prise en charge ou les flux expirés.
             if (settings.AutoSniff && ((err.Contains("Unsupported URL", StringComparison.OrdinalIgnoreCase) || 
                                         err.Contains("Falling back on generic information extractor", StringComparison.OrdinalIgnoreCase) && !isDirectStream) ||
                                        tokenExpired))
@@ -678,6 +720,8 @@ public class DownloadService
                 item.StatusDetail = loc["SniffSearchingStream"];
                 onProgress(item);
 
+                // StreamSnifferService tente d'abord le navigateur configuré sans interface,
+                // puis une fenêtre visible si l'utilisateur doit démarrer le lecteur ou valider la page.
                 var sniffer = new StreamSnifferService();
                 
                 // 1. Essai automatique en arrière-plan (headless)
@@ -750,7 +794,11 @@ public class DownloadService
         string ffmpegDir = Path.GetDirectoryName(ffmpegExe) ?? string.Empty;
 
         var settings = _settingsService.Settings;
-        string folder = !string.IsNullOrWhiteSpace(settings.DownloadFolder) ? settings.DownloadFolder : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string folder = !string.IsNullOrWhiteSpace(item.TargetFolder)
+            ? item.TargetFolder
+            : !string.IsNullOrWhiteSpace(settings.DownloadFolder)
+                ? settings.DownloadFolder
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         Directory.CreateDirectory(folder);
 
         string cleanTitle = !string.IsNullOrWhiteSpace(item.CustomTitle) ? item.CustomTitle : (!string.IsNullOrWhiteSpace(item.Title) ? item.Title : $"Live_{item.Id}");
@@ -1080,7 +1128,11 @@ public class DownloadService
     {
         string ffmpegExe = ToolLocator.GetFfmpegPath();
         var settings = _settingsService.Settings;
-        string folder = !string.IsNullOrWhiteSpace(settings.DownloadFolder) ? settings.DownloadFolder : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string folder = !string.IsNullOrWhiteSpace(item.TargetFolder)
+            ? item.TargetFolder
+            : !string.IsNullOrWhiteSpace(settings.DownloadFolder)
+                ? settings.DownloadFolder
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
         string cleanTitle = !string.IsNullOrWhiteSpace(item.CustomTitle) ? item.CustomTitle : (!string.IsNullOrWhiteSpace(item.Title) ? item.Title : $"Live_{item.Id}");
         cleanTitle = SanitizeFileName(cleanTitle);
@@ -1380,12 +1432,9 @@ public class DownloadService
                 sb.Append("-f \"ba[format_note*=original]/ba\" ");
             }
 
-            if (q.Contains("320")) sb.Append("-x --audio-format mp3 --audio-quality 320K");
-            else if (q.Contains("128")) sb.Append("-x --audio-format mp3 --audio-quality 128K");
-            else if (q.Contains("96")) sb.Append("-x --audio-format mp3 --audio-quality 96K");
-            else if (q.Contains("aac") || q.Contains("256")) sb.Append("-x --audio-format m4a");
-            else if (q.Contains("flac") || q.Contains("sans perte") || q.Contains("hi-res")) sb.Append("-x --audio-format flac");
-            else sb.Append("-x --audio-format mp3 --audio-quality 192K");
+            // yt-dlp ne fait ici qu'extraire le meilleur flux audio ; AudioOutputService
+            // applique ensuite les réglages globaux et propres à ce lien avec FFmpeg.
+            sb.Append("--embed-metadata ");
 
             return sb.ToString().Trim();
         }
@@ -1412,7 +1461,7 @@ public class DownloadService
             if (item.VideoCodec.Contains("H.264") || item.VideoCodec.Contains("AVC")) vcodecFilter = "[vcodec^=avc]";
             else if (item.VideoCodec.Contains("VP9")) vcodecFilter = "[vcodec^=vp9]";
             else if (item.VideoCodec.Contains("AV1")) vcodecFilter = "[vcodec^=av01]";
-            else if (item.VideoCodec.Contains("HEVC") || item.VideoCodec.Contains("H.265")) vcodecFilter = "[vcodec^=hev]";
+            else if (item.VideoCodec.Contains("HEVC") || item.VideoCodec.Contains("H.265")) vcodecFilter = "[vcodec~='^(hev|hvc)']";
         }
 
         // 3.3 Sélecteur de flux vidéo et audio multilingue (prise en charge multi-pistes et Tout télécharger)
@@ -1450,12 +1499,13 @@ public class DownloadService
             sb.Append($"-f \"({videoSelector}+ba[format_note*=original])/({videoSelector}+ba)/(b[height<={height}])/best\" ");
         }
 
-        // 3.4 Conteneur vidéo de sortie (MP4, MKV, WebM)
-        string container = !string.IsNullOrWhiteSpace(item.ContainerFormat) && !item.ContainerFormat.Contains("Recommandé", StringComparison.OrdinalIgnoreCase)
-            ? item.ContainerFormat.ToLowerInvariant().Trim()
-            : "mp4";
-
-        sb.Append($"--merge-output-format {container} --embed-metadata ");
+        // yt-dlp crée un fichier intermédiaire tolérant ; VideoOutputService effectue ensuite
+        // le remux vers le conteneur demandé et compare le résultat aux options sélectionnées.
+        string localizedContainer = LocalizationService.Instance.TranslateOption(item.ContainerFormat);
+        bool useRecommendedContainer = string.IsNullOrWhiteSpace(item.ContainerFormat) ||
+                                      string.Equals(localizedContainer, LocalizationService.Instance["OptionRecommended"], StringComparison.OrdinalIgnoreCase);
+        string container = useRecommendedContainer ? "mp4" : item.ContainerFormat.ToLowerInvariant().Trim().TrimStart('.');
+        sb.Append("--merge-output-format mkv --embed-metadata ");
 
         // 3.5 Sous-titres multilingues intégrés ou en fichiers séparés (multi-sélection et Tout télécharger)
         if (!string.IsNullOrWhiteSpace(item.SubtitleTrack) && !item.SubtitleTrack.Equals("Aucun", StringComparison.OrdinalIgnoreCase))
@@ -1505,6 +1555,13 @@ public class DownloadService
         }
 
         return sb.ToString().Trim();
+    }
+
+    private static bool IsAudioDownload(DownloadItem item)
+    {
+        string quality = (item.Quality ?? string.Empty).ToLowerInvariant();
+        return quality.Contains("mp3") || quality.Contains("audio") || quality.Contains("aac") ||
+               quality.Contains("flac") || quality.Contains("sans perte") || quality.Contains("hi-res");
     }
 
     private static void EnsureMatchingSrtForWindowsPlayer(string? videoPath, string folder)

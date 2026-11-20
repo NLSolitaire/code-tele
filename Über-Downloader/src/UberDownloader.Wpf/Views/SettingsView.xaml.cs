@@ -20,7 +20,6 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         Focusable = true;
         DataContextChanged += OnDataContextChanged;
-        Loaded += OnLoaded;
         PreviewKeyDown += OnPreviewKeyDown;
         LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
         ThemeService.ThemeChanged += OnThemeChanged;
@@ -28,31 +27,21 @@ public partial class SettingsView : UserControl
 
     private void OnThemeChanged()
     {
+        if (!IsVisible || SettingsTabs.SelectedIndex != 3 || string.IsNullOrEmpty(_lastRawLogs)) return;
+
         Dispatcher.Invoke(() =>
         {
-            if (!string.IsNullOrEmpty(_lastRawLogs))
-            {
-                UpdateLogDocument(_lastRawLogs);
-            }
-            else
-            {
-                UpdateLogDocument(Logger.ReadAllLogs());
-            }
+            UpdateLogDocument(_lastRawLogs);
         });
     }
 
     private void OnLanguageChanged()
     {
+        if (!IsVisible || SettingsTabs.SelectedIndex != 3 || string.IsNullOrEmpty(_lastRawLogs)) return;
+
         Dispatcher.Invoke(() =>
         {
-            if (!string.IsNullOrEmpty(_lastRawLogs))
-            {
-                UpdateLogDocument(_lastRawLogs);
-            }
-            else
-            {
-                UpdateLogDocument(Logger.ReadAllLogs());
-            }
+            UpdateLogDocument(_lastRawLogs);
         });
     }
 
@@ -70,6 +59,32 @@ public partial class SettingsView : UserControl
         }
     }
 
+    private void OnDiskSpaceMarginPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            e.Handled = !IsValidNumericInsertion(textBox, e.Text);
+        }
+    }
+
+    private void OnDiskSpaceMarginPasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (sender is not TextBox textBox ||
+            !e.DataObject.GetDataPresent(DataFormats.Text) ||
+            e.DataObject.GetData(DataFormats.Text) is not string pastedText ||
+            !IsValidNumericInsertion(textBox, pastedText))
+        {
+            e.CancelCommand();
+        }
+    }
+
+    private static bool IsValidNumericInsertion(TextBox textBox, string insertedText)
+    {
+        string candidate = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
+            .Insert(textBox.SelectionStart, insertedText);
+        return Regex.IsMatch(candidate, @"^\d*(?:[.,]\d*)?$");
+    }
+
     private static string? NormalizeKeyName(System.Windows.Input.Key key)
     {
         return key switch
@@ -84,13 +99,10 @@ public partial class SettingsView : UserControl
         };
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        UpdateLogDocument(Logger.ReadAllLogs());
-    }
-
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        // SettingsViewModel publie LogsRefreshed ; cet abonnement transforme les lignes du journal
+        // en FlowDocument, et l'ancien ViewModel est détaché si la vue change de contexte.
         if (_subscribedVm != null)
         {
             _subscribedVm.LogsRefreshed -= OnLogsRefreshed;
@@ -166,6 +178,12 @@ public partial class SettingsView : UserControl
                 headerText.Contains("Logs", StringComparison.OrdinalIgnoreCase) ||
                 tc.SelectedIndex == 3)
             {
+                if (DataContext is SettingsViewModel vm)
+                {
+                    // Les logs sont lus seulement à l'ouverture de l'onglet ; RefreshLogsCommand
+                    // émet LogsRefreshed, traité par OnLogsRefreshed ci-dessus.
+                    vm.RefreshLogsCommand.Execute(null);
+                }
                 ScrollLogsToBottom();
             }
         }

@@ -70,6 +70,13 @@ public static class ToolLocator
         string appRoot = Path.Combine(baseDir, "ffmpeg.exe");
         if (File.Exists(appRoot)) return appRoot;
 
+        // Cache du dépôt, utilisé lors du lancement de l'application depuis les sources.
+        string appToolsCache = Path.Combine(baseDir, "tools_cache", "ffmpeg.exe");
+        if (File.Exists(appToolsCache)) return appToolsCache;
+
+        string workingToolsCache = Path.Combine(Environment.CurrentDirectory, "tools_cache", "ffmpeg.exe");
+        if (File.Exists(workingToolsCache)) return workingToolsCache;
+
         // 3. Dossier de données utilisateur
         string dataBin = Path.Combine(AppPaths.DataDirectory, "bin", "ffmpeg.exe");
         if (File.Exists(dataBin)) return dataBin;
@@ -95,6 +102,13 @@ public static class ToolLocator
         // 2. Racine de l'application
         string appRoot = Path.Combine(baseDir, "ffprobe.exe");
         if (File.Exists(appRoot)) return appRoot;
+
+        // ffprobe est distribué avec ffmpeg dans le cache d'outils du dépôt.
+        string appToolsCache = Path.Combine(baseDir, "tools_cache", "ffprobe.exe");
+        if (File.Exists(appToolsCache)) return appToolsCache;
+
+        string workingToolsCache = Path.Combine(Environment.CurrentDirectory, "tools_cache", "ffprobe.exe");
+        if (File.Exists(workingToolsCache)) return workingToolsCache;
 
         // 3. Dossier de données utilisateur
         string dataBin = Path.Combine(AppPaths.DataDirectory, "bin", "ffprobe.exe");

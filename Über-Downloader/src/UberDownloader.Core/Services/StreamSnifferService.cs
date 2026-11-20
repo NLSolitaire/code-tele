@@ -136,6 +136,8 @@ public class StreamSnifferService
         return null;
     }
 
+    // Appelé par DownloadService après l'échec ciblé de yt-dlp : browser vient des réglages persistés,
+    // et headless distingue l'essai silencieux de la seconde tentative interactive.
     public async Task<SniffResult> SniffAsync(string url, bool headless, string browser = "Chromium", int timeoutSeconds = 60, CancellationToken cancellationToken = default)
     {
         try
@@ -159,6 +161,8 @@ public class StreamSnifferService
         void HandleUrlCandidate(string? cand)
         {
             if (string.IsNullOrWhiteSpace(cand) || IsAd(cand)) return;
+            // Seuls les candidats vidéo/HLS/DASH sont retenus ; les événements Request/Response ci-dessous
+            // alimentent cette même liste pour les pages et les lecteurs intégrés dans des frames.
             if (Regex.IsMatch(cand, @"(\.m3u8|\.mpd|\.mp4|\/hls\/|\/manifest)(\?|$)", RegexOptions.IgnoreCase) || cand.Contains("master", StringComparison.OrdinalIgnoreCase))
             {
                 lock (lockObj)
@@ -280,6 +284,8 @@ public class StreamSnifferService
 
             void AttachListeners(IPage p)
             {
+                // Les flux sont identifiés dans les requêtes réseau et via leur Content-Type,
+                // puis le meilleur candidat est retourné à DownloadService pour le téléchargement yt-dlp.
                 p.Request += (_, req) =>
                 {
                     try { HandleUrlCandidate(req.Url); } catch { }

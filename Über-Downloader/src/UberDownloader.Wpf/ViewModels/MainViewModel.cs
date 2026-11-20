@@ -47,6 +47,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _successNotificationMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isOutputFallbackNotificationVisible;
+
+    [ObservableProperty]
+    private string _outputFallbackNotificationTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _outputFallbackNotificationText = string.Empty;
+
+    private readonly List<string> _outputFallbackNotificationLines = new();
+    private readonly System.Windows.Threading.DispatcherTimer _outputFallbackNotificationTimer;
+
     [RelayCommand]
     private void DismissSuccessNotification()
     {
@@ -113,6 +125,13 @@ public partial class MainViewModel : ObservableObject
     private string _inputUrl = string.Empty;
 
     [ObservableProperty]
+    private string _linkDownloadFolder = string.Empty;
+
+    public string LinkFolderTooltip => string.IsNullOrWhiteSpace(LinkDownloadFolder)
+        ? Loc["ChooseLinkFolder"]
+        : Loc.Format("LinkFolderTooltip", LinkDownloadFolder);
+
+    [ObservableProperty]
     private string _customTitle = string.Empty;
 
     [ObservableProperty]
@@ -130,6 +149,23 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isAudioMode;
+
+    public bool CanSelectVideoMode => !IsInspecting && CurrentInspection?.HasVideo != false;
+    public bool CanSelectAudioMode => !IsInspecting &&
+                                     CurrentInspection?.IsLive != true &&
+                                     CurrentInspection?.HasAudio != false;
+    public bool CanUseVideoOptions => !IsInspecting &&
+                                     CurrentInspection?.IsLive != true &&
+                                     CurrentInspection?.HasVideo != false;
+    public bool CanUseAudioOptions => !IsInspecting &&
+                                     CurrentInspection?.IsLive != true &&
+                                     CurrentInspection?.HasAudio != false;
+    public bool CanSelectVideoResolution => CanUseVideoOptions &&
+                                            (CurrentInspection == null || CurrentInspection.AvailableResolutions.Count > 0);
+    public bool CanSelectAudioLanguages => CanUseAudioOptions &&
+                                           (CurrentInspection == null || CurrentInspection.AvailableAudioLanguages.Count > 1);
+    public bool CanSelectSubtitles => CanUseVideoOptions &&
+                                     (CurrentInspection == null || CurrentInspection.AvailableSubtitles.Count > 1);
 
     // Niveau 1 Vidéo : Résolution sélectionnée
     [ObservableProperty]
@@ -204,7 +240,10 @@ public partial class MainViewModel : ObservableObject
     private string _itemAudioBitrate = "Automatique";
 
     [ObservableProperty]
-    private string _itemAudioSampleRate = "Conserver celle de la source";
+    private string _itemAudioSampleRate = "Automatique";
+
+    [ObservableProperty]
+    private string _itemAudioBitDepth = "Automatique";
 
     [ObservableProperty]
     private string _itemAudioChannels = "Automatique";
@@ -223,8 +262,19 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<string> AvailableAudioCodecsList { get; } = new();
     public ObservableCollection<string> AvailableAudioBitratesList { get; } = new();
     public ObservableCollection<string> AvailableAudioSampleRatesList { get; } = new();
+    public ObservableCollection<string> AvailableAudioBitDepthsList { get; } = new();
     public ObservableCollection<string> AvailableAudioChannelsList { get; } = new();
-    public ObservableCollection<string> AudioTierOptions { get; } = new();
+    public ObservableCollection<AudioQualityTier> AudioTierOptions { get; } = new();
+
+    private static readonly (string LocalizationKey, int TargetBitrateKbps)[] AudioTierDefinitions =
+    {
+        ("AudioTierEconomy", 96),
+        ("AudioTierStandard", 128),
+        ("AudioTierGood", 256),
+        ("AudioTierHigh", 320),
+        ("AudioTierLossless", 800),
+        ("AudioTierHiRes", 2000)
+    };
 
     public void RefreshMainLocalizedOptions()
     {
@@ -234,13 +284,14 @@ public partial class MainViewModel : ObservableObject
         ItemAudioCodec = Loc.TranslateOption(ItemAudioCodec);
         ItemAudioBitrate = Loc.TranslateOption(ItemAudioBitrate);
         ItemAudioSampleRate = Loc.TranslateOption(ItemAudioSampleRate);
+        ItemAudioBitDepth = Loc.TranslateOption(ItemAudioBitDepth);
         ItemAudioChannels = Loc.TranslateOption(ItemAudioChannels);
         ItemContainer = Loc.TranslateOption(ItemContainer);
         ItemSpeedLimit = Loc.TranslateOption(ItemSpeedLimit);
         SelectedAudioTier = Loc.TranslateOption(SelectedAudioTier);
 
         ReplaceCollectionItems(AvailableContainersList,
-            Loc["OptionRecommended"], "MP4", "MKV", "WebM");
+            Loc["OptionRecommended"], "MP4", "MKV", "MOV", "WebM");
 
         ReplaceCollectionItems(AvailableItemSpeedLimits,
             Loc["OptionUnlimited"], "500 Ko/s", "1 Mo/s", "5 Mo/s", "10 Mo/s", "20 Mo/s", "50 Mo/s");
@@ -261,18 +312,15 @@ public partial class MainViewModel : ObservableObject
             Loc["OptionAutomatic"], "96 kb/s", "128 kb/s", "192 kb/s", "256 kb/s", "320 kb/s");
 
         ReplaceCollectionItems(AvailableAudioSampleRatesList,
-            Loc["OptionKeepSource"], "44,1 kHz", "48 kHz", "88,2 kHz", "96 kHz", "176,4 kHz", "192 kHz");
+            Loc["OptionAutomatic"], Loc["OptionKeepSource"], "44,1 kHz", "48 kHz", "88,2 kHz", "96 kHz", "176,4 kHz", "192 kHz");
+
+        ReplaceCollectionItems(AvailableAudioBitDepthsList,
+            Loc["OptionAutomatic"], Loc["OptionKeepSource"], "16 bits", "24 bits");
 
         ReplaceCollectionItems(AvailableAudioChannelsList,
             Loc["OptionAutomatic"], Loc["ChannelMono"], Loc["ChannelStereo"], Loc["ChannelMultichannel"]);
 
-        ReplaceCollectionItems(AudioTierOptions,
-            Loc["AudioTierEconomy"],
-            Loc["AudioTierStandard"],
-            Loc["AudioTierGood"],
-            Loc["AudioTierHigh"],
-            Loc["AudioTierLossless"],
-            Loc["AudioTierHiRes"]);
+        RefreshAudioTierOptions();
 
         if (AvailableAudioLanguages.Count == 1 && (AvailableAudioLanguages[0].Equals("Originale", StringComparison.OrdinalIgnoreCase) || AvailableAudioLanguages[0].Equals("Original", StringComparison.OrdinalIgnoreCase)))
         {
@@ -310,6 +358,56 @@ public partial class MainViewModel : ObservableObject
             col.Add(item);
         }
     }
+
+    private void RefreshAudioTierOptions()
+    {
+        AudioTierOptions.Clear();
+        foreach (var definition in AudioTierDefinitions)
+        {
+            AudioQualityTier? inspectedTier = CurrentInspection?.AudioTiers
+                .FirstOrDefault(tier => tier.TargetBitrateKbps == definition.TargetBitrateKbps);
+
+            AudioTierOptions.Add(new AudioQualityTier
+            {
+                Name = Loc[definition.LocalizationKey],
+                TargetBitrateKbps = definition.TargetBitrateKbps,
+                IsAvailable = inspectedTier?.IsAvailable ?? true,
+                UnavailableReason = inspectedTier?.UnavailableReason ?? string.Empty
+            });
+        }
+
+        if (CurrentInspection?.HasAudio == true &&
+            !AudioTierOptions.Any(option =>
+                option.IsAvailable &&
+                option.Name.Equals(SelectedAudioTier, StringComparison.OrdinalIgnoreCase)))
+        {
+            SelectedAudioTier = AudioTierOptions
+                .FirstOrDefault(option =>
+                    option.IsAvailable &&
+                    option.Name.Equals(Loc["AudioTierStandard"], StringComparison.OrdinalIgnoreCase))?.Name
+                ?? AudioTierOptions.FirstOrDefault(option => option.IsAvailable)?.Name
+                ?? SelectedAudioTier;
+        }
+    }
+
+    private void NotifyMediaOptionAvailabilityChanged()
+    {
+        OnPropertyChanged(nameof(CanSelectVideoMode));
+        OnPropertyChanged(nameof(CanSelectAudioMode));
+        OnPropertyChanged(nameof(CanUseVideoOptions));
+        OnPropertyChanged(nameof(CanUseAudioOptions));
+        OnPropertyChanged(nameof(CanSelectVideoResolution));
+        OnPropertyChanged(nameof(CanSelectAudioLanguages));
+        OnPropertyChanged(nameof(CanSelectSubtitles));
+    }
+
+    partial void OnCurrentInspectionChanged(MediaInspectionResult? value)
+    {
+        RefreshAudioTierOptions();
+        NotifyMediaOptionAvailabilityChanged();
+    }
+
+    partial void OnIsInspectingChanged(bool value) => NotifyMediaOptionAvailabilityChanged();
 
     // Résolutions vidéo détectées
     public ObservableCollection<string> AvailableResolutions { get; } = new()
@@ -357,9 +455,23 @@ public partial class MainViewModel : ObservableObject
         SettingsVm = settingsVm;
         PlaylistPrepVm = playlistPrepVm;
 
+        _outputFallbackNotificationTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(3)
+        };
+        _outputFallbackNotificationTimer.Tick += (_, _) =>
+        {
+            _outputFallbackNotificationTimer.Stop();
+            IsOutputFallbackNotificationVisible = false;
+            _outputFallbackNotificationLines.Clear();
+            OutputFallbackNotificationText = string.Empty;
+        };
+        _downloadScheduler.ItemCompleted += ShowOutputFallbacks;
+
         SettingsVm.RequestClose = () =>
         {
             IsSettingsOpen = false;
+            UpdateEstimatedSize();
         };
 
         PlaylistPrepVm.OnCancel = () =>
@@ -378,6 +490,7 @@ public partial class MainViewModel : ObservableObject
         {
             RecalculateDateSeparators();
             RefreshMainLocalizedOptions();
+            OnPropertyChanged(nameof(LinkFolderTooltip));
         };
 
         RefreshMainLocalizedOptions();
@@ -388,6 +501,44 @@ public partial class MainViewModel : ObservableObject
         };
         activeCountTimer.Tick += (s, e) => RefreshActiveDownloadsCount();
         activeCountTimer.Start();
+    }
+
+    private void ShowOutputFallbacks(DownloadItem item)
+    {
+        if (item.Status != JobStatus.Finished || item.OutputFallbacks.Count == 0)
+        {
+            return;
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null)
+        {
+            return;
+        }
+
+        if (!dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(() => ShowOutputFallbacks(item));
+            return;
+        }
+
+        foreach (string fallback in item.OutputFallbacks)
+        {
+            string line = Loc.Format("OutputFallbackItemTitle", item.Title, fallback);
+            if (!_outputFallbackNotificationLines.Contains(line, StringComparer.Ordinal))
+            {
+                _outputFallbackNotificationLines.Add(line);
+            }
+        }
+
+        bool wasVisible = IsOutputFallbackNotificationVisible;
+        OutputFallbackNotificationTitle = Loc["OutputFallbackNoticeTitle"];
+        OutputFallbackNotificationText = string.Join(Environment.NewLine, _outputFallbackNotificationLines);
+        IsOutputFallbackNotificationVisible = true;
+        if (!wasVisible)
+        {
+            _outputFallbackNotificationTimer.Start();
+        }
     }
 
     public async Task InitializeAsync()
@@ -417,6 +568,8 @@ public partial class MainViewModel : ObservableObject
 
     private async Task HandleStartupQueueAsync()
     {
+        // AutoResumeOnStartup provient d'AppSettings (édité dans SettingsView) :
+        // les statuts persistés sont ensuite remis en file via DownloadScheduler.
         bool autoResume = _settingsService.Settings.AutoResumeOnStartup;
 
         if (autoResume)
@@ -545,6 +698,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SelectVideoMode()
     {
+        if (!CanSelectVideoMode) return;
         IsVideoMode = true;
         IsAudioMode = false;
         UpdateEstimatedSize();
@@ -553,6 +707,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SelectAudioMode()
     {
+        if (!CanSelectAudioMode) return;
         IsVideoMode = false;
         IsAudioMode = true;
         UpdateEstimatedSize();
@@ -561,7 +716,6 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        SettingsVm.LoadSettings();
         IsSettingsOpen = true;
     }
 
@@ -587,6 +741,7 @@ public partial class MainViewModel : ObservableObject
         _cachedPlaylistResult = null;
         if (string.IsNullOrWhiteSpace(value) || !value.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
+            LinkDownloadFolder = string.Empty;
             _inspectCts?.Cancel();
             IsInspecting = false;
             CurrentInspection = null;
@@ -613,6 +768,9 @@ public partial class MainViewModel : ObservableObject
         _inspectCts = new CancellationTokenSource();
         var token = _inspectCts.Token;
 
+        CurrentInspection = null;
+        IsAudioDropDownOpen = false;
+        IsSubtitlesDropDownOpen = false;
         IsInspecting = true;
         bool isPlaylist = _playlistService.IsPlaylistUrl(url);
         InspectionStatusText = isPlaylist
@@ -657,6 +815,16 @@ public partial class MainViewModel : ObservableObject
                     CurrentInspection = result;
                     IsInspecting = false;
                     InspectionStatusText = string.Empty;
+                    if (result.IsLive || (result.HasVideo == true && result.HasAudio == false))
+                    {
+                        IsVideoMode = true;
+                        IsAudioMode = false;
+                    }
+                    else if (result.HasVideo == false && result.HasAudio == true)
+                    {
+                        IsVideoMode = false;
+                        IsAudioMode = true;
+                    }
 
                     // Quand le lien rentré change, le titre doit être revérifié
                     if (!string.IsNullOrWhiteSpace(result.Title))
@@ -742,6 +910,16 @@ public partial class MainViewModel : ObservableObject
         UpdateEstimatedSize();
     }
 
+    partial void OnItemAudioCodecChanged(string value) => UpdateEstimatedSize();
+
+    partial void OnItemAudioBitrateChanged(string value) => UpdateEstimatedSize();
+
+    partial void OnItemAudioSampleRateChanged(string value) => UpdateEstimatedSize();
+
+    partial void OnItemAudioBitDepthChanged(string value) => UpdateEstimatedSize();
+
+    partial void OnItemAudioChannelsChanged(string value) => UpdateEstimatedSize();
+
     partial void OnSelectedResolutionChanged(string value)
     {
         UpdateEstimatedSize();
@@ -757,14 +935,24 @@ public partial class MainViewModel : ObservableObject
 
         if (IsAudioMode)
         {
-            string tier = SelectedAudioTier.ToLowerInvariant();
-            if (tier.Contains("96")) EstimatedSizeText = "≈ 3.5 Mo";
-            else if (tier.Contains("128")) EstimatedSizeText = "≈ 4.8 Mo";
-            else if (tier.Contains("256")) EstimatedSizeText = "≈ 9.2 Mo";
-            else if (tier.Contains("320")) EstimatedSizeText = "≈ 12 Mo";
-            else if (tier.Contains("qualité cd") || tier.Contains("sans perte")) EstimatedSizeText = "≈ 28 Mo";
-            else if (tier.Contains("hi-res")) EstimatedSizeText = "≈ 75 Mo";
-            else EstimatedSizeText = "≈ 5 Mo";
+            var estimateItem = new DownloadItem
+            {
+                Quality = SelectedAudioTier,
+                AudioCodec = ItemAudioCodec,
+                AudioBitrate = ItemAudioBitrate,
+                AudioSampleRate = ItemAudioSampleRate,
+                AudioBitDepth = ItemAudioBitDepth,
+                AudioChannels = ItemAudioChannels
+            };
+            double durationSeconds = CurrentInspection.DurationSeconds ?? 210;
+            double estimatedBytes = AudioOutputService.EstimateOutputSizeBytes(
+                estimateItem,
+                _settingsService.Settings,
+                durationSeconds,
+                CurrentInspection.SourceAudioCodec,
+                CurrentInspection.SourceAudioSampleRate,
+                CurrentInspection.SourceAudioChannels);
+            EstimatedSizeText = MediaInspector.FormatEstimateBytes(estimatedBytes);
         }
         else
         {
@@ -844,6 +1032,8 @@ public partial class MainViewModel : ObservableObject
 
     public void CheckClipboardForUrl()
     {
+        // MainWindow appelle cette méthode à l'ouverture, à l'activation et par timer ;
+        // le réglage ClipboardWatch et les URL ignorées viennent de SettingsService.
         if (!_settingsService.Settings.ClipboardWatch) return;
 
         try
@@ -875,6 +1065,32 @@ public partial class MainViewModel : ObservableObject
         IsAdvancedOpen = !IsAdvancedOpen;
     }
 
+    partial void OnLinkDownloadFolderChanged(string value) => OnPropertyChanged(nameof(LinkFolderTooltip));
+
+    [RelayCommand]
+    private void ChooseLinkDownloadFolder()
+    {
+        string defaultFolder = !string.IsNullOrWhiteSpace(_settingsService.Settings.DownloadFolder)
+            ? _settingsService.Settings.DownloadFolder
+            : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string initialFolder = Directory.Exists(LinkDownloadFolder)
+            ? LinkDownloadFolder
+            : Directory.Exists(defaultFolder)
+                ? defaultFolder
+                : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = Loc["ChooseLinkFolder"],
+            InitialDirectory = initialFolder
+        };
+
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.FolderName))
+        {
+            LinkDownloadFolder = dialog.FolderName;
+        }
+    }
+
     [RelayCommand]
     private async Task StartDownloadAsync()
     {
@@ -884,9 +1100,11 @@ public partial class MainViewModel : ObservableObject
         string qualityLabel = IsAudioMode ? SelectedAudioTier : SelectedResolution;
 
         // Contrôle des doublons approfondi par fichier, qualité et ID (Étape 3)
-        string baseFolder = !string.IsNullOrWhiteSpace(_settingsService.Settings.DownloadFolder)
-            ? _settingsService.Settings.DownloadFolder
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string baseFolder = !string.IsNullOrWhiteSpace(LinkDownloadFolder)
+            ? LinkDownloadFolder
+            : !string.IsNullOrWhiteSpace(_settingsService.Settings.DownloadFolder)
+                ? _settingsService.Settings.DownloadFolder
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         string mediaTitle = !string.IsNullOrWhiteSpace(CustomTitle) ? CustomTitle : (CurrentInspection?.Title ?? url);
 
         var dupResult = await _duplicateService.CheckDuplicateAsync(url, mediaTitle, 0, baseFolder, qualityLabel, _databaseService);
@@ -1014,6 +1232,7 @@ public partial class MainViewModel : ObservableObject
         var item = new DownloadItem
         {
             Url = url,
+            TargetFolder = LinkDownloadFolder,
             TargetUrl = string.Empty,
             Title = !string.IsNullOrWhiteSpace(CustomTitle) ? CustomTitle : (CurrentInspection?.Title ?? url),
             CustomTitle = CustomTitle,
@@ -1030,6 +1249,7 @@ public partial class MainViewModel : ObservableObject
             AudioCodec = ItemAudioCodec,
             AudioBitrate = ItemAudioBitrate,
             AudioSampleRate = ItemAudioSampleRate,
+            AudioBitDepth = ItemAudioBitDepth,
             AudioChannels = ItemAudioChannels,
             IsLive = isLiveUrl,
             LiveMaxDuration = _settingsService.Settings.LiveMaxDuration,
@@ -1047,6 +1267,7 @@ public partial class MainViewModel : ObservableObject
 
         InputUrl = string.Empty;
         CustomTitle = string.Empty;
+        LinkDownloadFolder = string.Empty;
         CurrentInspection = null;
 
         _downloadScheduler.Enqueue(
@@ -1150,6 +1371,7 @@ public partial class MainViewModel : ObservableObject
                 AudioCodec = ItemAudioCodec,
                 AudioBitrate = ItemAudioBitrate,
                 AudioSampleRate = ItemAudioSampleRate,
+                AudioBitDepth = ItemAudioBitDepth,
                 AudioChannels = ItemAudioChannels,
                 NamingTemplate = prepVm.SelectedNamingTemplate,
                 Status = itemStatus,
@@ -1168,6 +1390,7 @@ public partial class MainViewModel : ObservableObject
 
         InputUrl = string.Empty;
         CustomTitle = string.Empty;
+        LinkDownloadFolder = string.Empty;
         CurrentInspection = null;
         _cachedPlaylistResult = null;
 
@@ -1362,7 +1585,7 @@ public partial class MainViewModel : ObservableObject
                 }
                 else
                 {
-                    card.DateHeader = d.ToString("dd MMMM yyyy");
+                    card.DateHeader = Loc.FormatDateHeader(d);
                 }
                 lastDate = d;
             }
@@ -1676,7 +1899,7 @@ public partial class MainViewModel : ObservableObject
                 string path = it.OutputPath;
                 if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 {
-                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : _settingsService.Settings.DownloadFolder;
+                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : !string.IsNullOrWhiteSpace(it.TargetFolder) ? it.TargetFolder : _settingsService.Settings.DownloadFolder;
                     path = DownloadService.ResolveActualFilePath(path, folder, it.CustomTitle, it.Title);
                 }
 
@@ -1686,7 +1909,7 @@ public partial class MainViewModel : ObservableObject
                 }
                 else
                 {
-                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : _settingsService.Settings.DownloadFolder;
+                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : !string.IsNullOrWhiteSpace(it.TargetFolder) ? it.TargetFolder : _settingsService.Settings.DownloadFolder;
                     if (Directory.Exists(folder)) Process.Start("explorer.exe", folder);
                 }
             },
@@ -1695,7 +1918,7 @@ public partial class MainViewModel : ObservableObject
                 string path = it.OutputPath;
                 if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 {
-                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : _settingsService.Settings.DownloadFolder;
+                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : !string.IsNullOrWhiteSpace(it.TargetFolder) ? it.TargetFolder : _settingsService.Settings.DownloadFolder;
                     path = DownloadService.ResolveActualFilePath(path, folder, it.CustomTitle, it.Title);
                 }
 
@@ -1707,7 +1930,7 @@ public partial class MainViewModel : ObservableObject
                 }
                 else
                 {
-                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : _settingsService.Settings.DownloadFolder;
+                    string folder = !string.IsNullOrWhiteSpace(it.PlaylistFolder) ? it.PlaylistFolder : !string.IsNullOrWhiteSpace(it.TargetFolder) ? it.TargetFolder : _settingsService.Settings.DownloadFolder;
                     if (Directory.Exists(folder))
                     {
                         Process.Start("explorer.exe", folder);

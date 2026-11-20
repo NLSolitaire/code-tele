@@ -6,6 +6,8 @@ namespace UberDownloader.Core.Models;
 
 public class AppSettings
 {
+    // Contrat de réglages persisté par SettingsService : SettingsViewModel édite les valeurs liées en mémoire,
+    // puis Save les écrit ici ; MainViewModel et DownloadService les lisent pour appliquer le comportement.
     public string DownloadFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     public string DefaultQuality { get; set; } = "1080p Full HD";
     public string Theme { get; set; } = "System"; // Dark, Light, System

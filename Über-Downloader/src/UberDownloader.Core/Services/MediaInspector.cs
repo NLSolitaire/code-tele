@@ -110,6 +110,7 @@ public class MediaInspector
         if (lower.Contains("twitch.tv") || lower.Contains("kick.com"))
         {
             result.IsLive = true;
+            result.HasVideo = true;
             result.Extractor = lower.Contains("twitch.tv") ? "twitch" : "kick";
 
             string channel = string.Empty;
@@ -231,16 +232,44 @@ public class MediaInspector
                     var resolutionsMap = new Dictionary<int, string>();
                     var videoCodecs = new HashSet<string>();
                     int maxAudioBitrate = 0;
+                    bool hasAudioFormatInfo = false;
+                    bool hasAudioFormat = false;
+                    bool hasVideoFormatInfo = false;
+                    bool hasVideoFormat = false;
 
                     if (root.TryGetProperty("formats", out var formatsProp) && formatsProp.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var fmt in formatsProp.EnumerateArray())
                         {
+                            if (fmt.TryGetProperty("acodec", out var audioCapabilityProp))
+                            {
+                                hasAudioFormatInfo = true;
+                                hasAudioFormat |= IsMediaCodec(audioCapabilityProp.GetString());
+                            }
+                            if (fmt.TryGetProperty("audio_channels", out var audioChannelsProp) &&
+                                audioChannelsProp.ValueKind == JsonValueKind.Number &&
+                                audioChannelsProp.TryGetInt32(out int detectedAudioChannels) &&
+                                detectedAudioChannels > 0)
+                            {
+                                hasAudioFormatInfo = true;
+                                hasAudioFormat = true;
+                            }
+                            if (fmt.TryGetProperty("vcodec", out var videoCapabilityProp))
+                            {
+                                hasVideoFormatInfo = true;
+                                hasVideoFormat |= IsMediaCodec(videoCapabilityProp.GetString());
+                            }
+
                             // Audio bitrate
+                            bool isBestAudioFormat = false;
                             if (fmt.TryGetProperty("abr", out var abrProp) && abrProp.ValueKind == JsonValueKind.Number && abrProp.TryGetDouble(out var abr))
                             {
                                 int abrInt = (int)Math.Round(abr);
-                                if (abrInt > maxAudioBitrate) maxAudioBitrate = abrInt;
+                                if (abrInt >= maxAudioBitrate)
+                                {
+                                    maxAudioBitrate = abrInt;
+                                    isBestAudioFormat = true;
+                                }
                             }
 
                             // Détection des pistes audio multilingues
@@ -285,15 +314,37 @@ public class MediaInspector
                             if (fmt.TryGetProperty("acodec", out var acodecProp))
                             {
                                 string? acodec = acodecProp.GetString();
-                                if (!string.IsNullOrEmpty(acodec) && acodec != "none")
+                                if (!string.IsNullOrEmpty(acodec) && acodec != "none" &&
+                                    (isBestAudioFormat || string.IsNullOrWhiteSpace(result.SourceAudioCodec)))
                                 {
                                     result.SourceAudioCodec = acodec;
+                                }
+                            }
+
+                            if (isBestAudioFormat)
+                            {
+                                if (fmt.TryGetProperty("asr", out var sampleRateProp) &&
+                                    sampleRateProp.ValueKind == JsonValueKind.Number &&
+                                    sampleRateProp.TryGetInt32(out int sampleRate) &&
+                                    sampleRate > 0)
+                                {
+                                    result.SourceAudioSampleRate = sampleRate;
+                                }
+
+                                if (fmt.TryGetProperty("audio_channels", out var channelsProp) &&
+                                    channelsProp.ValueKind == JsonValueKind.Number &&
+                                    channelsProp.TryGetInt32(out int channels) &&
+                                    channels > 0)
+                                {
+                                    result.SourceAudioChannels = channels;
                                 }
                             }
 
                             // Résolution vidéo (hauteur en pixels)
                             if (fmt.TryGetProperty("height", out var hProp) && hProp.ValueKind == JsonValueKind.Number && hProp.TryGetInt32(out var h) && h > 0)
                             {
+                                hasVideoFormatInfo = true;
+                                hasVideoFormat = true;
                                 if (!resolutionsMap.ContainsKey(h))
                                 {
                                     string label = h switch
@@ -326,6 +377,24 @@ public class MediaInspector
                         result.AvailableVideoCodecs = new List<string>(videoCodecs);
                         result.AvailableAudioLanguages = audioLanguagesSet.ToList();
                         result.AvailableSubtitles = subtitlesSet.ToList();
+                    }
+
+                    if (hasAudioFormatInfo)
+                    {
+                        result.HasAudio = hasAudioFormat;
+                    }
+                    else if (root.TryGetProperty("acodec", out var rootAudioCodecProp))
+                    {
+                        result.HasAudio = IsMediaCodec(rootAudioCodecProp.GetString());
+                    }
+
+                    if (hasVideoFormatInfo)
+                    {
+                        result.HasVideo = hasVideoFormat;
+                    }
+                    else if (root.TryGetProperty("vcodec", out var rootVideoCodecProp))
+                    {
+                        result.HasVideo = IsMediaCodec(rootVideoCodecProp.GetString());
                     }
                 }
             }
@@ -385,6 +454,10 @@ public class MediaInspector
         return code;
     }
 
+    private static bool IsMediaCodec(string? codec) =>
+        !string.IsNullOrWhiteSpace(codec) &&
+        !codec.Equals("none", StringComparison.OrdinalIgnoreCase);
+
     private static void BuildAudioTiers(MediaInspectionResult result)
     {
         double durSec = result.DurationSeconds ?? 210.0;
@@ -437,8 +510,8 @@ public class MediaInspector
             new()
             {
                 Name = "Sans perte",
-                Format = "FLAC — qualité CD, 16 bits / 44,1 kHz",
-                TargetBitrateKbps = 1411,
+                Format = "FLAC — conserve la résolution de la source",
+                TargetBitrateKbps = 800,
                 Audience = "Sans perte",
                 IsLossless = true,
                 IsAvailable = result.SourceAudioCodec.Contains("flac", StringComparison.OrdinalIgnoreCase) ||
@@ -449,8 +522,8 @@ public class MediaInspector
             new()
             {
                 Name = "Hi-Res",
-                Format = "FLAC — 24 bits / 96 kHz ou plus, selon la source",
-                TargetBitrateKbps = 4608,
+                Format = "FLAC — source 24 bits / 96 kHz ou plus requise",
+                TargetBitrateKbps = 2000,
                 Audience = "Audiophile",
                 IsLossless = true,
                 IsAvailable = false,
@@ -474,7 +547,7 @@ public class MediaInspector
         result.VideoEstimatedSizes["144p"] = FormatEstimateBytes((120 + 64) * 1024 / 8 * dur);
     }
 
-    private static string FormatEstimateBytes(double bytes)
+    public static string FormatEstimateBytes(double bytes)
     {
         if (bytes <= 0) return "--";
         if (bytes < 1024 * 1024) return $"≈ {(bytes / 1024):0} Ko";

@@ -58,6 +58,7 @@ venv/
 .gemini/
 .claude/
 .agents/
+.qodo/
 
 # OS specific files
 Thumbs.db

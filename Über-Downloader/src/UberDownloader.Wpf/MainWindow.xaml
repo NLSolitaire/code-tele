@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:UberDownloader.Wpf.Views"
         xmlns:models="clr-namespace:UberDownloader.Core.Data;assembly=UberDownloader.Core"
         mc:Ignorable="d"
-        Title="{Binding Loc[AppTitle]}" Icon="/Assets/Uber.ico" Height="650" Width="650" MinHeight="600" MinWidth="625"
+        Title="{Binding Loc[AppTitle]}" Icon="pack://application:,,,/Assets/TWD.png" ShowInTaskbar="True" Height="650" Width="650" MinHeight="600" MinWidth="625"
         Background="{DynamicResource WindowBackgroundBrush}" WindowStartupLocation="CenterScreen">
     <Grid>
         <!-- VUE PRINCIPALE DES TÉLÉCHARGEMENTS -->
@@ -85,6 +85,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <Grid>
@@ -106,7 +107,13 @@
                             </TextBlock>
                         </Grid>
 
-                        <Button Grid.Column="1" Content="{Binding Loc[StartDownload]}" Command="{Binding StartDownloadCommand}" Cursor="Hand"
+                        <Button Grid.Column="1" Content="📁" Command="{Binding ChooseLinkDownloadFolderCommand}" Cursor="Hand"
+                                Width="34" Height="34" Margin="8,0,0,0" Padding="0"
+                                Background="{DynamicResource SubCardBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" FontSize="14"
+                                ToolTip="{Binding LinkFolderTooltip}"/>
+
+                        <Button Grid.Column="2" Content="{Binding Loc[StartDownload]}" Command="{Binding StartDownloadCommand}" Cursor="Hand"
                                 Width="110" Height="34" Margin="8,0,0,0"
                                 Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" FontSize="12"/>
                     </Grid>
@@ -122,13 +129,16 @@
                         <!-- Bascule Vidéo / Audio -->
                         <Border Background="{DynamicResource InputBackgroundBrush}" CornerRadius="6" Padding="2" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="{Binding Loc[ModeVideo]}" Command="{Binding SelectVideoModeCommand}" Cursor="Hand" Padding="10,4" BorderThickness="0" FontWeight="SemiBold" FontSize="11">
+                                <Button Content="{Binding Loc[ModeVideo]}" Command="{Binding SelectVideoModeCommand}" IsEnabled="{Binding CanSelectVideoMode}" Cursor="Hand" Padding="10,4" BorderThickness="0" FontWeight="SemiBold" FontSize="11">
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Cursor" Value="Hand"/>
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.45"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsVideoMode}" Value="True">
                                                     <Setter Property="Background" Value="#2563EB"/>
                                                     <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -137,13 +147,16 @@
                                         </Style>
                                     </Button.Style>
                                 </Button>
-                                <Button Content="{Binding Loc[ModeAudio]}" Command="{Binding SelectAudioModeCommand}" Cursor="Hand" Padding="10,4" BorderThickness="0" FontWeight="SemiBold" FontSize="11">
+                                <Button Content="{Binding Loc[ModeAudio]}" Command="{Binding SelectAudioModeCommand}" IsEnabled="{Binding CanSelectAudioMode}" Cursor="Hand" Padding="10,4" BorderThickness="0" FontWeight="SemiBold" FontSize="11">
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Cursor" Value="Hand"/>
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.45"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsAudioMode}" Value="True">
                                                     <Setter Property="Background" Value="#2563EB"/>
                                                     <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -207,7 +220,7 @@
                                 <!-- Résolution -->
                                 <StackPanel Grid.Column="0" Margin="0,0,6,0">
                                     <TextBlock Text="{Binding Loc[VideoResolution]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
-                                    <ComboBox ItemsSource="{Binding AvailableResolutions}" SelectedItem="{Binding SelectedResolution}" Height="28"/>
+                                    <ComboBox ItemsSource="{Binding AvailableResolutions}" SelectedItem="{Binding SelectedResolution}" IsEnabled="{Binding CanSelectVideoResolution}" Height="28"/>
                                 </StackPanel>
 
                                 <!-- Langue audio (Cases à cocher multiples) -->
@@ -216,7 +229,7 @@
                                     <Grid>
                                         <ToggleButton x:Name="AudioDropDownToggle"
                                                       IsChecked="{Binding IsAudioDropDownOpen, Mode=TwoWay}"
-                                                      Height="28" Cursor="Hand">
+                                                      Height="28" IsEnabled="{Binding CanSelectAudioLanguages}" Cursor="Hand">
                                             <ToggleButton.Template>
                                                 <ControlTemplate TargetType="ToggleButton">
                                                     <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Padding="8,4">
@@ -235,7 +248,7 @@
                                         <Popup IsOpen="{Binding IsAudioDropDownOpen, Mode=TwoWay}"
                                                PlacementTarget="{Binding ElementName=AudioDropDownToggle}"
                                                StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" Placement="Bottom">
-                                            <Border Background="{DynamicResource DropDownBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Width="220" MaxHeight="220" Padding="8" Margin="0,2,0,0">
+                                            <Border Background="{DynamicResource DropDownBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Width="220" MaxHeight="220" Padding="8" Margin="0,2,0,0" IsEnabled="{Binding CanSelectAudioLanguages}">
                                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                                     <StackPanel>
                                                         <CheckBox Content="{Binding Loc[SelectAll]}" IsChecked="{Binding IsAllAudioSelected, Mode=TwoWay}"
@@ -262,7 +275,7 @@
                                     <Grid>
                                         <ToggleButton x:Name="SubtitlesDropDownToggle"
                                                       IsChecked="{Binding IsSubtitlesDropDownOpen, Mode=TwoWay}"
-                                                      Height="28" Cursor="Hand">
+                                                      Height="28" IsEnabled="{Binding CanSelectSubtitles}" Cursor="Hand">
                                             <ToggleButton.Template>
                                                 <ControlTemplate TargetType="ToggleButton">
                                                     <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Padding="8,4">
@@ -281,12 +294,12 @@
                                         <Popup IsOpen="{Binding IsSubtitlesDropDownOpen, Mode=TwoWay}"
                                                PlacementTarget="{Binding ElementName=SubtitlesDropDownToggle}"
                                                StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" Placement="Bottom">
-                                            <Border Background="{DynamicResource DropDownBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Width="240" MaxHeight="240" Padding="8" Margin="0,2,0,0">
+                                            <Border Background="{DynamicResource DropDownBackgroundBrush}" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1" CornerRadius="6" Width="240" MaxHeight="240" Padding="8" Margin="0,2,0,0" IsEnabled="{Binding CanSelectSubtitles}">
                                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                                                     <StackPanel>
                                                         <CheckBox Content="{Binding Loc[SelectAll]}" IsChecked="{Binding IsAllSubtitlesSelected, Mode=TwoWay}"
                                                                   Foreground="#38BDF8" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6" Cursor="Hand"/>
-                                                        <CheckBox Content="{Binding Loc[EmbedInVideo]}" IsChecked="{Binding EmbedSubtitles, Mode=TwoWay}"
+                                                        <CheckBox Content="{Binding Loc[EmbedInVideo]}" IsChecked="{Binding EmbedSubtitles, Mode=TwoWay}" IsEnabled="{Binding CanSelectSubtitles}"
                                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,6" Cursor="Hand"/>
                                                         <Border Height="1" Background="{DynamicResource BorderBrushColor}" Margin="0,0,0,6"/>
                                                         <ItemsControl ItemsSource="{Binding SubtitleTracks}">
@@ -308,7 +321,7 @@
                                 <StackPanel Grid.Column="3" VerticalAlignment="Bottom" Margin="2,0,0,1">
                                     <TextBlock Text="{Binding Loc[EstimatedSize]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="4" Padding="8,4" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
-                                        <TextBlock Text="{Binding EstimatedSizeText}" Foreground="#10B981" FontWeight="Bold" FontSize="11"/>
+                                        <TextBlock Text="{Binding EstimatedSizeText}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="11"/>
                                     </Border>
                                 </StackPanel>
                             </Grid>
@@ -322,15 +335,26 @@
 
                                 <!-- Profils Audio Niveau 1 -->
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock Text="{Binding Loc[AudioProfiles]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
-                                    <ComboBox ItemsSource="{Binding AudioTierOptions}" SelectedItem="{Binding SelectedAudioTier}" Height="28"/>
+                                    <TextBlock Text="{Binding Loc[AudioProfiles]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
+                                    <ComboBox ItemsSource="{Binding AudioTierOptions}" SelectedValuePath="Name" SelectedValue="{Binding SelectedAudioTier, Mode=TwoWay}" IsEnabled="{Binding CanUseAudioOptions}" Height="28">
+                                        <ComboBox.ItemContainerStyle>
+                                            <Style TargetType="ComboBoxItem">
+                                                <Setter Property="IsEnabled" Value="{Binding IsAvailable}"/>
+                                            </Style>
+                                        </ComboBox.ItemContainerStyle>
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                 </StackPanel>
 
                                 <!-- Taille estimée -->
                                 <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="2,0,0,1">
-                                    <TextBlock Text="{Binding Loc[EstimatedSize]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
-                                    <Border Background="#1E293B" CornerRadius="4" Padding="8,4" BorderBrush="#334155" BorderThickness="1">
-                                        <TextBlock Text="{Binding EstimatedSizeText}" Foreground="#10B981" FontWeight="Bold" FontSize="11"/>
+                                    <TextBlock Text="{Binding Loc[EstimatedSize]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="4" Padding="8,4" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
+                                        <TextBlock Text="{Binding EstimatedSizeText}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Bold" FontSize="11"/>
                                     </Border>
                                 </StackPanel>
                             </Grid>
@@ -338,7 +362,7 @@
                     </Border>
 
                     <!-- Accordéon Niveau 2 : Paramètres avancés spécifiques à ce téléchargement -->
-                    <Border Margin="0,8,0,0" Padding="10" Background="#111827" CornerRadius="6" BorderBrush="#1F2937" BorderThickness="1">
+                    <Border Margin="0,8,0,0" Padding="10" Background="{DynamicResource SubCardBackgroundBrush}" CornerRadius="6" BorderBrush="{DynamicResource BorderBrushColor}" BorderThickness="1">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -351,7 +375,7 @@
                         </Border.Style>
                         <StackPanel>
                             <!-- Mode Vidéo -->
-                            <Grid Visibility="{Binding IsVideoMode, Converter={StaticResource BoolToVis}}">
+                            <Grid Visibility="{Binding IsVideoMode, Converter={StaticResource BoolToVis}}" IsEnabled="{Binding CanUseVideoOptions}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -360,30 +384,31 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[Container]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[Container]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableContainersList}" SelectedItem="{Binding ItemContainer}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[VideoCodec]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[VideoCodec]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableVideoCodecsList}" SelectedItem="{Binding ItemVideoCodec}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[FPS]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[FPS]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableVideoFpsList}" SelectedItem="{Binding ItemVideoFps}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="3" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[DynamicRange]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[DynamicRange]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableDynamicRangesList}" SelectedItem="{Binding ItemVideoDynamicRange}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">
-                                    <TextBlock Text="{Binding Loc[SpeedLimitShort]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[SpeedLimitShort]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableItemSpeedLimits}" SelectedItem="{Binding ItemSpeedLimit}" Height="28"/>
                                 </StackPanel>
                             </Grid>
 
                             <!-- Mode Audio -->
-                            <Grid Visibility="{Binding IsAudioMode, Converter={StaticResource BoolToVis}}">
+                            <Grid Visibility="{Binding IsAudioMode, Converter={StaticResource BoolToVis}}" IsEnabled="{Binding CanUseAudioOptions}">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -391,23 +416,27 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[AudioCodec]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[AudioCodec]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableAudioCodecsList}" SelectedItem="{Binding ItemAudioCodec}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[AudioBitrate]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[AudioBitrate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableAudioBitratesList}" SelectedItem="{Binding ItemAudioBitrate}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[SampleRate]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[SampleRate]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableAudioSampleRatesList}" SelectedItem="{Binding ItemAudioSampleRate}" Height="28"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="3" Margin="0,0,6,0">
-                                    <TextBlock Text="{Binding Loc[Channels]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                    <TextBlock Text="{Binding Loc[Channels]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableAudioChannelsList}" SelectedItem="{Binding ItemAudioChannels}" Height="28"/>
                                 </StackPanel>
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="{Binding Loc[SpeedLimitShort]}" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,3"/>
+                                <StackPanel Grid.Column="4" Margin="0,0,6,0">
+                                    <TextBlock Text="{Binding Loc[BitDepth]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
+                                    <ComboBox ItemsSource="{Binding AvailableAudioBitDepthsList}" SelectedItem="{Binding ItemAudioBitDepth}" Height="28"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="5">
+                                    <TextBlock Text="{Binding Loc[SpeedLimitShort]}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding AvailableItemSpeedLimits}" SelectedItem="{Binding ItemSpeedLimit}" Height="28"/>
                                 </StackPanel>
                             </Grid>
@@ -784,5 +813,31 @@
                 </StackPanel>
             </Border>
         </Grid>
+        <Border Panel.ZIndex="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                MaxWidth="560"
+                Margin="18,0,18,16"
+                Padding="14,10"
+                Background="#1E293B"
+                BorderBrush="#F59E0B"
+                BorderThickness="1.5"
+                CornerRadius="12"
+                IsHitTestVisible="False"
+                Visibility="{Binding IsOutputFallbackNotificationVisible, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <TextBlock Text="{Binding OutputFallbackNotificationTitle}"
+                           Foreground="#FDE68A"
+                           FontWeight="Bold"
+                           FontSize="12"
+                           Margin="0,0,0,4"/>
+                <ScrollViewer MaxHeight="140" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding OutputFallbackNotificationText}"
+                               Foreground="White"
+                               FontSize="11"
+                               TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

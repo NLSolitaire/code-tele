@@ -18,10 +18,13 @@ public partial class MainWindow : Window
 
         Loaded += async (s, e) =>
         {
+            // MainViewModel restaure l'historique et applique AutoResumeOnStartup avant le premier contrôle du presse-papiers.
             await _viewModel.InitializeAsync();
             _viewModel.CheckClipboardForUrl();
         };
 
+        // CheckClipboardForUrl est aussi appelé à l'activation et périodiquement :
+        // son option ClipboardWatch vient de SettingsViewModel et est persistée dans AppSettings.
         Activated += (s, e) =>
         {
             _viewModel.CheckClipboardForUrl();

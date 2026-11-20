@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UberDownloader.Core.Models;
+using UberDownloader.Core.Services;
 
 namespace UberDownloader.Wpf.ViewModels;
 
@@ -337,7 +338,11 @@ public partial class JobCardViewModel : ObservableObject
     {
         get
         {
-            if (!string.IsNullOrWhiteSpace(_item.ContainerFormat) && !_item.ContainerFormat.Contains("Recommandé", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(_item.ContainerFormat) &&
+                !string.Equals(
+                    LocalizationService.Instance.TranslateOption(_item.ContainerFormat),
+                    LocalizationService.Instance["OptionRecommended"],
+                    StringComparison.OrdinalIgnoreCase))
                 return _item.ContainerFormat.ToUpperInvariant();
             if (!string.IsNullOrWhiteSpace(_item.OutputPath))
             {

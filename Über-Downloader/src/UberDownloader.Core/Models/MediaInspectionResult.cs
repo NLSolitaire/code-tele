@@ -26,14 +26,17 @@ public class MediaInspectionResult
     public double? DurationSeconds { get; set; }
     public bool IsLive { get; set; }
     public string Extractor { get; set; } = string.Empty;
+    public bool? HasVideo { get; set; }
+    public bool? HasAudio { get; set; }
 
     public int MaxAvailableAudioBitrateKbps { get; set; } = 128;
     public string SourceAudioCodec { get; set; } = string.Empty;
     public int? SourceAudioSampleRate { get; set; }
+    public int? SourceAudioChannels { get; set; }
 
     public List<string> AvailableResolutions { get; set; } = new();
     public List<string> AvailableVideoCodecs { get; set; } = new();
-    public List<string> AvailableContainers { get; set; } = new() { "Recommandé", "MP4", "MKV", "WebM" };
+    public List<string> AvailableContainers { get; set; } = new() { "Recommandé", "MP4", "MKV", "MOV", "WebM" };
     public List<string> AvailableAudioLanguages { get; set; } = new() { "Originale" };
     public List<string> AvailableSubtitles { get; set; } = new() { "Aucun" };
     public List<AudioQualityTier> AudioTiers { get; set; } = new();

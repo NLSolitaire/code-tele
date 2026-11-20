@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -225,7 +226,14 @@ public partial class SettingsViewModel : ObservableObject
     private string _liveRecordMode = "Enregistrer les directs depuis le clic";
 
     [ObservableProperty]
-    private string _liveDiskSpaceMargin = "500 Mo";
+    private string _liveDiskSpaceMarginValue = "500";
+
+    [ObservableProperty]
+    private string _liveDiskSpaceMarginUnit = "Mo";
+
+    public string LiveDiskSpaceMargin => $"{LiveDiskSpaceMarginValue} {LiveDiskSpaceMarginUnit}";
+
+    public List<string> AvailableDiskSpaceUnits { get; } = new() { "Ko", "Mo", "Go", "To" };
 
     [ObservableProperty]
     private string _liveDiskSpaceValidationMessage = string.Empty;
@@ -321,7 +329,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _successBubbleSubtitle = string.Empty;
 
-    // Barre transversale comptant le nombre de changements avant enregistrement
+    // Notification temporaire indiquant le nombre de modifications non enregistrées
     [ObservableProperty]
     private int _pendingChangesCount;
 
@@ -329,7 +337,12 @@ public partial class SettingsViewModel : ObservableObject
     private bool _hasPendingChanges;
 
     [ObservableProperty]
-    private string _pendingChangesBannerText = string.Empty;
+    private string _pendingChangesNotificationText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isPendingChangesNotificationVisible;
+
+    private readonly DispatcherTimer _pendingChangesNotificationTimer;
 
     public ObservableCollection<LogEntry> LogEntries { get; } = new();
 
@@ -412,10 +425,10 @@ public partial class SettingsViewModel : ObservableObject
                 Loc["OptionAutomatic"], "96 kb/s", "128 kb/s", "192 kb/s", "256 kb/s", "320 kb/s");
 
             ReplaceItems(AvailableAudioSampleRates,
-                Loc["OptionKeepSource"], "44,1 kHz", "48 kHz", "88,2 kHz", "96 kHz", "176,4 kHz", "192 kHz");
+                Loc["OptionAutomatic"], Loc["OptionKeepSource"], "44,1 kHz", "48 kHz", "88,2 kHz", "96 kHz", "176,4 kHz", "192 kHz");
 
             ReplaceItems(AvailableAudioBitDepths,
-                Loc["OptionKeepSource"], "16 bits", "24 bits");
+                Loc["OptionAutomatic"], Loc["OptionKeepSource"], "16 bits", "24 bits");
 
             ReplaceItems(AvailableAudioChannels,
                 Loc["OptionAutomatic"], Loc["ChannelMono"], Loc["ChannelStereo"], Loc["ChannelMultichannel"]);
@@ -475,6 +488,8 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    // Ce snapshot sert au compteur de changements affiché par SettingsView ; Cancel recharge les valeurs
+    // de SettingsService, tandis que Save les copie dans AppSettings avant de prendre un nouveau snapshot.
     private sealed record SettingsSnapshot(
         string DownloadFolder,
         string SelectedTheme,
@@ -518,6 +533,12 @@ public partial class SettingsViewModel : ObservableObject
     {
         _settingsService = settingsService;
         _downloadScheduler = downloadScheduler;
+        _pendingChangesNotificationTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        _pendingChangesNotificationTimer.Tick += (_, _) =>
+        {
+            _pendingChangesNotificationTimer.Stop();
+            IsPendingChangesNotificationVisible = false;
+        };
         LocalizationService.Instance.LanguageChanged += () =>
         {
             RefreshLocalizedOptions();
@@ -538,6 +559,7 @@ public partial class SettingsViewModel : ObservableObject
             DefaultQuality = s.DefaultQuality;
             Theme = string.IsNullOrWhiteSpace(s.Theme) ? "Dark" : s.Theme;
             SelectedTheme = GetLocalizedTheme(Theme);
+            UberDownloader.Wpf.Services.ThemeService.ApplyTheme(Theme);
 
             Language = string.IsNullOrWhiteSpace(s.Language) ? "FR" : s.Language;
             GlobalHotkey = string.IsNullOrWhiteSpace(s.GlobalHotkey) ? "Ctrl+Shift+O" : s.GlobalHotkey;
@@ -561,7 +583,17 @@ public partial class SettingsViewModel : ObservableObject
             
             LiveEngine = s.LiveEngine;
             LiveRecordMode = s.LiveRecordMode;
-            LiveDiskSpaceMargin = string.IsNullOrWhiteSpace(s.LiveDiskSpaceMargin) ? "500 Mo" : s.LiveDiskSpaceMargin;
+            if (DiskSpaceHelper.TryParseDiskSpace(s.LiveDiskSpaceMargin, out long marginBytes, out _))
+            {
+                string[] marginParts = DiskSpaceHelper.FormatDiskSpace(marginBytes).Split(' ', 2);
+                LiveDiskSpaceMarginValue = marginParts[0];
+                LiveDiskSpaceMarginUnit = marginParts[1];
+            }
+            else
+            {
+                LiveDiskSpaceMarginValue = "500";
+                LiveDiskSpaceMarginUnit = "Mo";
+            }
             ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin);
             LiveMaxDuration = s.LiveMaxDuration;
             LiveInterruptionAction = s.LiveInterruptionAction;
@@ -622,7 +654,6 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         TakeSnapshot();
-        RefreshLogs();
     }
 
     private void TakeSnapshot()
@@ -693,7 +724,8 @@ public partial class SettingsViewModel : ObservableObject
         {
             PendingChangesCount = 0;
             HasPendingChanges = false;
-            PendingChangesBannerText = string.Empty;
+            PendingChangesNotificationText = string.Empty;
+            HidePendingChangesNotification();
             return;
         }
 
@@ -736,16 +768,38 @@ public partial class SettingsViewModel : ObservableObject
 
         if (count == 1)
         {
-            PendingChangesBannerText = LocalizationService.Instance["PendingChangesSingular"];
+            PendingChangesNotificationText = LocalizationService.Instance["PendingChangesSingular"];
         }
         else if (count > 1)
         {
-            PendingChangesBannerText = string.Format(LocalizationService.Instance["PendingChangesPlural"], count);
+            PendingChangesNotificationText = string.Format(LocalizationService.Instance["PendingChangesPlural"], count);
         }
         else
         {
-            PendingChangesBannerText = string.Empty;
+            PendingChangesNotificationText = string.Empty;
         }
+
+        if (count > 0 && !_isRefreshingOptions)
+        {
+            ShowPendingChangesNotification();
+        }
+        else
+        {
+            HidePendingChangesNotification();
+        }
+    }
+
+    private void ShowPendingChangesNotification()
+    {
+        IsPendingChangesNotificationVisible = true;
+        _pendingChangesNotificationTimer.Stop();
+        _pendingChangesNotificationTimer.Start();
+    }
+
+    private void HidePendingChangesNotification()
+    {
+        _pendingChangesNotificationTimer.Stop();
+        IsPendingChangesNotificationVisible = false;
     }
 
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
@@ -755,7 +809,8 @@ public partial class SettingsViewModel : ObservableObject
             _initialSnapshot != null &&
             e.PropertyName != nameof(PendingChangesCount) &&
             e.PropertyName != nameof(HasPendingChanges) &&
-            e.PropertyName != nameof(PendingChangesBannerText) &&
+            e.PropertyName != nameof(PendingChangesNotificationText) &&
+            e.PropertyName != nameof(IsPendingChangesNotificationVisible) &&
             e.PropertyName != nameof(IsSuccessBubbleVisible) &&
             e.PropertyName != nameof(SuccessBubbleTitle) &&
             e.PropertyName != nameof(SuccessBubbleSubtitle) &&
@@ -830,9 +885,20 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    partial void OnLiveDiskSpaceMarginChanged(string value)
+    partial void OnLiveDiskSpaceMarginValueChanged(string value)
     {
-        ValidateLiveDiskSpaceMargin(value);
+        OnLiveDiskSpaceMarginPartsChanged();
+    }
+
+    partial void OnLiveDiskSpaceMarginUnitChanged(string value)
+    {
+        OnLiveDiskSpaceMarginPartsChanged();
+    }
+
+    private void OnLiveDiskSpaceMarginPartsChanged()
+    {
+        OnPropertyChanged(nameof(LiveDiskSpaceMargin));
+        ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin);
     }
 
     public bool ValidateLiveDiskSpaceMargin(string text)
@@ -848,36 +914,6 @@ public partial class SettingsViewModel : ObservableObject
             LiveDiskSpaceValidationMessage = error;
             OnPropertyChanged(nameof(HasLiveDiskSpaceError));
             return false;
-        }
-    }
-
-    [RelayCommand]
-    private void IncrementDiskMargin()
-    {
-        if (DiskSpaceHelper.TryParseDiskSpace(LiveDiskSpaceMargin, out long bytes, out _))
-        {
-            long step = bytes < 1024L * 1024 * 1024 ? 100L * 1024 * 1024 : 500L * 1024 * 1024;
-            long next = bytes + step;
-            LiveDiskSpaceMargin = DiskSpaceHelper.FormatDiskSpace(next);
-        }
-        else
-        {
-            LiveDiskSpaceMargin = "500 Mo";
-        }
-    }
-
-    [RelayCommand]
-    private void DecrementDiskMargin()
-    {
-        if (DiskSpaceHelper.TryParseDiskSpace(LiveDiskSpaceMargin, out long bytes, out _))
-        {
-            long step = bytes <= 1024L * 1024 * 1024 ? 100L * 1024 * 1024 : 500L * 1024 * 1024;
-            long next = Math.Max(DiskSpaceHelper.MinimumAllowedBytes, bytes - step);
-            LiveDiskSpaceMargin = DiskSpaceHelper.FormatDiskSpace(next);
-        }
-        else
-        {
-            LiveDiskSpaceMargin = "500 Mo";
         }
     }
 
@@ -1004,6 +1040,15 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void Save()
     {
+        if (!ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin) ||
+            (!IsLiveDurationUnlimited && !ValidateLiveDurationCustom(LiveMaxDurationCustom)))
+        {
+            StatusMessage = string.Empty;
+            return;
+        }
+
+        // Les contrôles de SettingsView ne modifient pas le stockage directement :
+        // ici, les valeurs éditées sont copiées vers AppSettings puis persistées par SettingsService.
         var s = _settingsService.Settings;
         s.DownloadFolder = DownloadFolder;
         s.DefaultQuality = DefaultQuality;
@@ -1019,14 +1064,7 @@ public partial class SettingsViewModel : ObservableObject
         
         s.LiveEngine = LiveEngine;
         s.LiveRecordMode = LiveRecordMode;
-        if (ValidateLiveDiskSpaceMargin(LiveDiskSpaceMargin))
-        {
-            s.LiveDiskSpaceMargin = LiveDiskSpaceMargin;
-        }
-        else
-        {
-            s.LiveDiskSpaceMargin = "500 Mo";
-        }
+        s.LiveDiskSpaceMargin = LiveDiskSpaceMargin;
         
         if (IsLiveDurationUnlimited)
         {
@@ -1036,16 +1074,8 @@ public partial class SettingsViewModel : ObservableObject
         }
         else
         {
-            if (ValidateLiveDurationCustom(LiveMaxDurationCustom))
-            {
-                s.LiveMaxDuration = LiveMaxDurationCustom;
-                LiveMaxDuration = LiveMaxDurationCustom;
-            }
-            else
-            {
-                s.LiveMaxDuration = "60 min";
-                LiveMaxDuration = "60 min";
-            }
+            s.LiveMaxDuration = LiveMaxDurationCustom;
+            LiveMaxDuration = LiveMaxDurationCustom;
         }
         s.LiveInterruptionAction = LiveInterruptionAction;
 
@@ -1081,7 +1111,7 @@ public partial class SettingsViewModel : ObservableObject
         string displayRetries = IsMaxRetriesUnlimited ? Loc["OptionUnlimited"] : MaxRetries.ToString();
         Logger.Log(Loc.Format("LogSettingsSaved", Language, SpeedLimit, s.GlobalHotkey, displayConcurrent, displayRetries));
 
-        // Met à jour le snapshot : la barre transversale disparaît immédiatement après le clic sur Enregistrer
+        // Met à jour le snapshot : la notification disparaît immédiatement après l'enregistrement
         TakeSnapshot();
 
         // Afficher la bulle de confirmation (durée 3s max si non fermée manuellement) et RESTER dans la page des paramètres
@@ -1093,8 +1123,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         _successBubbleCts?.Cancel();
         IsSuccessBubbleVisible = false;
-        LoadSettings();
         RequestClose?.Invoke();
+        LoadSettings();
     }
 
     [RelayCommand]
@@ -1155,6 +1185,23 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             Logger.Log($"[KOFI] Impossible d'ouvrir le lien Ko-fi : {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private void OpenProjectRepository()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/NLSolitaire/code-tele",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"[ABOUT] Impossible d'ouvrir le dépôt GitHub : {ex.Message}");
         }
     }
 

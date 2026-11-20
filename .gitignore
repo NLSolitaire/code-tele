@@ -16,6 +16,9 @@ TestResults/
 dist/
 publish/
 output/
+tools_cache/
+**/tools_cache/
+**/dist/
 [Ll]ancer-UberDownloader.exe
 
 # Temporary media downloads & fragment files
@@ -37,6 +40,8 @@ scratch/
 *.sqlite
 *.sqlite3
 *.db
+settings.json
+**/settings.json
 logs/
 data/
 
@@ -53,9 +58,12 @@ venv/
 .gemini/
 .claude/
 .agents/
+.qodo/
 
 # OS specific files
 Thumbs.db
 Desktop.ini
 .DS_Store
 $RECYCLE.BIN/
+Über-Downloader/Uber.ico
+Über-Downloader/src/UberDownloader.Wpf/Assets/Uber.ico

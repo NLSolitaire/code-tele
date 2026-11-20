@@ -29,6 +29,8 @@ public class DownloadScheduler
     private readonly ConcurrentDictionary<string, QueueEntry> _activeJobs = new();
     private int _currentMaxConcurrent;
 
+    public event Action<DownloadItem>? ItemCompleted;
+
     public DownloadScheduler(DownloadService downloadService, DatabaseService databaseService, SettingsService settingsService)
     {
         _downloadService = downloadService;
@@ -393,6 +395,7 @@ public class DownloadScheduler
                 if (!willRetry)
                 {
                     entry.OnCompleted(item);
+                    ItemCompleted?.Invoke(item);
                 }
             }
             catch (Exception ex)

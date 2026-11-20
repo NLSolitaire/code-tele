@@ -28,6 +28,8 @@ public partial class PlaylistPreparationViewModel : ObservableObject
         _databaseService = databaseService;
         _duplicateService = duplicateService;
         _settingsService = settingsService;
+        Loc.LanguageChanged += RefreshLocalizedOptions;
+        RefreshLocalizedOptions();
     }
 
     [ObservableProperty]
@@ -76,6 +78,20 @@ public partial class PlaylistPreparationViewModel : ObservableObject
     private int _newVideosCount;
 
     public bool HasNewVideos => NewVideosCount > 0;
+
+    private void RefreshLocalizedOptions()
+    {
+        string selectedContainer = Loc.TranslateOption(SelectedContainer);
+        AvailableContainersList.Clear();
+        AvailableContainersList.Add(Loc["OptionRecommended"]);
+        AvailableContainersList.Add("MP4");
+        AvailableContainersList.Add("MKV");
+        AvailableContainersList.Add("MOV");
+        AvailableContainersList.Add("WebM");
+        SelectedContainer = AvailableContainersList.Contains(selectedContainer)
+            ? selectedContainer
+            : Loc["OptionRecommended"];
+    }
 
     partial void OnNewVideosCountChanged(int value) => OnPropertyChanged(nameof(HasNewVideos));
 
@@ -126,10 +142,7 @@ public partial class PlaylistPreparationViewModel : ObservableObject
         "Hi-Res — FLAC — 24 bits / 96 kHz ou plus, selon la source"
     };
 
-    public List<string> AvailableContainersList { get; } = new()
-    {
-        "Recommandé", "MP4", "MKV", "WebM"
-    };
+    public ObservableCollection<string> AvailableContainersList { get; } = new();
 
     public List<string> AvailableNamingTemplates { get; } = new()
     {

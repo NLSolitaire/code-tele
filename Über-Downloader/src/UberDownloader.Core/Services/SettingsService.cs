@@ -27,6 +27,8 @@ public class SettingsService
 
     public SettingsService()
     {
+        // SettingsService est partagé par le conteneur de App.xaml.cs ; il charge le contrat AppSettings
+        // avant que SettingsViewModel et MainViewModel n'en lisent ou n'en modifient les valeurs.
         _settingsFilePath = Path.Combine(AppPaths.DataDirectory, "settings.json");
 
         _jsonOptions = new JsonSerializerOptions
@@ -72,6 +74,8 @@ public class SettingsService
             _currentSettings = newSettings;
             try
             {
+                // L'écriture temporaire puis le remplacement évitent de laisser un JSON partiel
+                // si l'application est interrompue pendant la sauvegarde des paramètres.
                 string tempPath = _settingsFilePath + ".tmp";
                 string json = JsonSerializer.Serialize(newSettings, _jsonOptions);
                 File.WriteAllText(tempPath, json);

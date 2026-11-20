@@ -20,6 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\TWD.png" />
     <Resource Include="Assets\Uber.ico" />
   </ItemGroup>
 

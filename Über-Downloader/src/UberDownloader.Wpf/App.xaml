@@ -3,10 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:UberDownloader.Wpf.Converters">
     <Application.Resources>
+        <!-- Ces convertisseurs sont partagés par les vues XAML pour relier les booléens des ViewModels à l'affichage. -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
-        <!-- Pinceaux de thème dynamiques (Nuit / Jour / Système) -->
+        <!-- Palette globale consommée avec DynamicResource par MainWindow, SettingsView,
+             PlaylistPreparationView et JobCardControl. ThemeService.ApplyColors (ThemeService.cs)
+             remplace ces clés ; App.xaml.cs initialise le thème avant la création de MainWindow,
+             puis SettingsViewModel peut l'actualiser quand l'utilisateur choisit un thème. -->
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0F172A"/>
         <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1E293B"/>
         <SolidColorBrush x:Key="SubCardBackgroundBrush" Color="#111827"/>
@@ -36,10 +40,11 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <!-- Style élégant et lisible pour ComboBoxItem-->
+        <!-- Les éléments déroulants reprennent la palette dynamique ; leurs états sélectionné/survolé
+             restent contrastés, y compris lorsque ThemeService applique le thème Jour. -->
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="Foreground" Value="#F8FAFC" />
+            <Setter Property="Background" Value="{DynamicResource DropDownBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -69,11 +74,12 @@
             </Setter>
         </Style>
 
-        <!-- Style global ComboBox avec popup sombre et texte clair parfaitement lisible -->
+        <!-- Style partagé par les ComboBox des vues : le fond, le texte et la flèche suivent la palette
+             ci-dessus, tandis que le Popup utilise DropDownBackgroundBrush pour rester lisible dans les deux thèmes. -->
         <Style TargetType="ComboBox">
-            <Setter Property="Foreground" Value="#F8FAFC" />
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Padding" Value="10,6" />
@@ -89,8 +95,8 @@
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border x:Name="Border"
-                                                Background="#1E293B"
-                                                BorderBrush="#334155"
+                                                Background="{DynamicResource CardBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrushColor}"
                                                 BorderThickness="1"
                                                 CornerRadius="8"
                                                 Padding="10,6">
@@ -102,7 +108,7 @@
                                                 <Path Grid.Column="1"
                                                       HorizontalAlignment="Center"
                                                       VerticalAlignment="Center"
-                                                      Fill="#94A3B8"
+                                                      Fill="{DynamicResource TextSecondaryBrush}"
                                                       Data="M 0 0 L 4 4 L 8 0 Z" />
                                             </Grid>
                                         </Border>
@@ -141,9 +147,9 @@
                                       MinWidth="{TemplateBinding ActualWidth}"
                                       MaxHeight="260">
                                     <Border x:Name="DropDownBorder"
-                                            Background="#0F172A"
+                                            Background="{DynamicResource DropDownBackgroundBrush}"
                                             BorderThickness="1"
-                                            BorderBrush="#334155"
+                                            BorderBrush="{DynamicResource BorderBrushColor}"
                                             CornerRadius="8"
                                             Margin="0,4,0,0">
                                         <ScrollViewer Margin="4,6" SnapsToDevicePixels="true">
