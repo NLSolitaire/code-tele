@@ -50,7 +50,11 @@ namespace UberDownloaderLauncher
 
             if (string.IsNullOrEmpty(projectRoot) || !Directory.Exists(projectRoot))
             {
-                string fallback = @"c:\Users\HP\Downloads\code-tele\Über-Downloader";
+                string fallback = @"c:\Users\HP\Downloads\code-tele\The-Whatever-Downloader";
+                if (!Directory.Exists(fallback))
+                {
+                    fallback = @"c:\Users\HP\Downloads\code-tele\Über-Downloader";
+                }
                 if (Directory.Exists(fallback))
                 {
                     projectRoot = fallback;
@@ -176,8 +180,13 @@ namespace UberDownloaderLauncher
                     return current;
                 }
 
-                string subProject = Path.Combine(current, "Über-Downloader");
-                if (File.Exists(Path.Combine(subProject, "UberDownloader.slnx")))
+                string subProject = Path.Combine(current, "The-Whatever-Downloader");
+                if (Directory.Exists(subProject))
+                {
+                    return subProject;
+                }
+                subProject = Path.Combine(current, "Über-Downloader");
+                if (Directory.Exists(subProject))
                 {
                     return subProject;
                 }

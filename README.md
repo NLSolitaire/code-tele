@@ -128,7 +128,7 @@ If you enjoy The Whatever Downloader and find it helpful, feel free to support t
 ### Cloner et compiler
 ```powershell
 git clone https://github.com/NLSolitaire/code-tele.git
-cd code-tele\Über-Downloader
+cd code-tele\The-Whatever-Downloader
 dotnet build src\UberDownloader.Wpf\UberDownloader.Wpf.csproj -c Release
 ```
 
@@ -137,5 +137,5 @@ dotnet build src\UberDownloader.Wpf\UberDownloader.Wpf.csproj -c Release
 ## 📄 Licence & Liens
 
 - **Dépôt officiel GitHub** : [https://github.com/NLSolitaire/code-tele](https://github.com/NLSolitaire/code-tele)
-- **Licence** : Distribué sous licence **GNU General Public License v3.0 (GPL-3.0)**. Consultez le fichier [LICENSE](Über-Downloader/LICENSE).
-- **Notices tierces** : Composants et bibliothèques tiers répertoriés dans [THIRD-PARTY-NOTICES.txt](Über-Downloader/THIRD-PARTY-NOTICES.txt).
+- **Licence** : Distribué sous licence **GNU General Public License v3.0 (GPL-3.0)**. Consultez le fichier [LICENSE](LICENSE).
+- **Notices tierces** : Composants et bibliothèques tiers répertoriés dans [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).

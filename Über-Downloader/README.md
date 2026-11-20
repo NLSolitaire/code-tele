@@ -128,7 +128,7 @@ If you enjoy The Whatever Downloader and find it helpful, feel free to support t
 ### Cloner et compiler
 ```powershell
 git clone https://github.com/NLSolitaire/code-tele.git
-cd code-tele\Über-Downloader
+cd code-tele\The-Whatever-Downloader
 dotnet build src\UberDownloader.Wpf\UberDownloader.Wpf.csproj -c Release
 ```
 

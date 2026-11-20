@@ -43,7 +43,10 @@ scratch/
 settings.json
 **/settings.json
 logs/
-data/
+/data/
+**/dist/**/data/
+!**/src/**/Data/
+!**/src/**/Data/**
 
 # Python cache & virtual environments
 __pycache__/
@@ -65,5 +68,3 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 $RECYCLE.BIN/
-Über-Downloader/Uber.ico
-Über-Downloader/src/UberDownloader.Wpf/Assets/Uber.ico

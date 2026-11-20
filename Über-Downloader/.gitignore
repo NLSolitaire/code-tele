@@ -43,7 +43,10 @@ scratch/
 *.sqlite3
 *.db
 logs/
-data/
+/data/
+**/dist/**/data/
+!**/src/**/Data/
+!**/src/**/Data/**
 
 # Python cache & virtual environments
 __pycache__/
