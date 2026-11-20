@@ -195,7 +195,10 @@ if (Test-Path $standaloneExePath) {
 }
 
 # Installer EXE
-$installerPath = Join-Path $installerDir "UberDownloader-v$Version-Setup-x64.exe"
+$installerPath = Join-Path $installerDir "TheWhateverDownloader-v$Version-Setup-x64.exe"
+if (-not (Test-Path $installerPath)) {
+    $installerPath = Join-Path $installerDir "UberDownloader-v$Version-Setup-x64.exe"
+}
 if (Test-Path $installerPath) {
     $h = Get-FileHash -Path $installerPath -Algorithm SHA256
     $hashes += "$($h.Hash)  $([System.IO.Path]::GetFileName($h.Path))"

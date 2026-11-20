@@ -1,10 +1,25 @@
 # ⚡ The Whatever Downloader (TWD)
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/NLSolitaire/code-tele/releases)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(x64)-lightgrey.svg)](https://microsoft.com/windows)
-[![Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5e5b.svg?logo=kofi&logoColor=white)](https://ko-fi.com/yddraiggoch)
+<p align="center">
+  <a href="https://github.com/NLSolitaire/code-tele/releases/download/v1.0.0/TheWhateverDownloader-v1.0.0-Setup-x64.exe">
+    <img src="https://img.shields.io/badge/📦_Télécharger-Installeur_Setup_(x64)-22c55e?style=for-the-badge&logo=windows&logoColor=white" alt="Télécharger Installeur Setup" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/NLSolitaire/code-tele/releases/download/v1.0.0/TheWhateverDownloader-v1.0.0-win-x64-portable.zip">
+    <img src="https://img.shields.io/badge/💼_Télécharger-Version_Portable_(.zip)-3b82f6?style=for-the-badge&logo=windows&logoColor=white" alt="Télécharger Version Portable" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://ko-fi.com/yddraiggoch">
+    <img src="https://img.shields.io/badge/☕_Soutenir-Ko--fi-ff5e5b?style=for-the-badge&logo=kofi&logoColor=white" alt="Soutenir sur Ko-fi" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/NLSolitaire/code-tele/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version 1.0.0" /></a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-green.svg" alt="License GPL v3" /></a>
+  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10.0-purple.svg" alt=".NET 10" /></a>
+  <a href="https://microsoft.com/windows"><img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(x64)-lightgrey.svg" alt="Platform Windows" /></a>
+</p>
 
 **The Whatever Downloader** est un gestionnaire et téléchargeur multimédia moderne, ultra-rapide et ergonomique sous Windows, propulsé par [.NET 10 WPF](https://dotnet.microsoft.com/), [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://ffmpeg.org/) et [Streamlink](https://streamlink.github.io/).
 
@@ -12,14 +27,17 @@
 
 ---
 
-## 📥 Téléchargement & Installation
+## 📥 Téléchargements directs (v1.0.0)
 
-Pour installer et utiliser The Whatever Downloader :
+Cliquez sur l'option de votre choix pour lancer le téléchargement immédiat :
 
-1. Rendez-vous dans la section **[Releases](https://github.com/NLSolitaire/code-tele/releases)**.
-2. Choisissez le format qui vous convient :
-   - **📦 Installeur standard (`TheWhateverDownloader-v1.0.0-Setup-x64.exe`)** : Installe l'application localement dans votre profil utilisateur (sans droits administrateur requis), avec raccourcis menu Démarrer et Bureau.
-   - **💼 Archive Portable (`TheWhateverDownloader-v1.0.0-win-x64-portable.zip`)** : Ne requiert aucune installation ni dépendance (.NET, yt-dlp et FFmpeg sont directement intégrés). Décompressez simplement l'archive où vous le souhaitez (clé USB, dossier personnel) et lancez `TheWhateverDownloader.exe`. Toutes les configurations restent isolées localement dans `data/`.
+- 📦 **[Télécharger l'Installeur Windows (.exe)](https://github.com/NLSolitaire/code-tele/releases/download/v1.0.0/TheWhateverDownloader-v1.0.0-Setup-x64.exe)**  
+  *Installe proprement l'application dans votre profil utilisateur Windows (sans droits administrateur), avec raccourcis menu Démarrer et Bureau.*
+
+- 💼 **[Télécharger la Version Portable autonome (.zip)](https://github.com/NLSolitaire/code-tele/releases/download/v1.0.0/TheWhateverDownloader-v1.0.0-win-x64-portable.zip)**  
+  *Prêt à l'emploi, aucune installation nécessaire (.NET, yt-dlp et FFmpeg intégrés). Idéal sur clé USB. Vos configurations et historiques restent isolés dans le dossier `data/`.*
+
+- 📋 **[Consulter toutes les versions & notes de publication](https://github.com/NLSolitaire/code-tele/releases)**
 3. ⚠️ **Avertissement Windows SmartScreen ("Windows a protégé votre PC")** :  
    Comme l'application est un projet open-source récent non signé par un certificat commercial payant, Windows SmartScreen peut afficher un avertissement au premier lancement.  
    👉 Cliquez simplement sur **« Informations complémentaires »** puis sur **« Exécuter quand même »**.
