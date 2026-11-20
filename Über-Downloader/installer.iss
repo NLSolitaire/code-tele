@@ -26,7 +26,7 @@ DisableProgramGroupPage=yes
 LicenseFile=LICENSE
 OutputDir=dist\installer
 OutputBaseFilename=TheWhateverDownloader-v{#MyAppVersion}-Setup-x64
-SetupIconFile=Uber.ico
+SetupIconFile=TWD.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -53,12 +53,12 @@ Source: "dist\win-x64\.playwright\*"; DestDir: "{app}\.playwright"; Flags: ignor
 Source: "dist\win-x64\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\win-x64\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\win-x64\Scripts\*"; DestDir: "{app}\Scripts"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "Uber.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TWD.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\Uber.ico"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\Uber.ico"
-Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup; IconFilename: "{app}\Uber.ico"
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\TWD.ico"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\TWD.ico"
+Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup; IconFilename: "{app}\TWD.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

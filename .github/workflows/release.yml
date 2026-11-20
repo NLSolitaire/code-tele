@@ -95,6 +95,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: false
           files: |
             ${{ env.DIST_PATH }}/*-portable.zip
             ${{ env.DIST_PATH }}/*-Standalone-*.exe
